@@ -97,7 +97,7 @@
                 <div>
                     <label for="week-filter" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Filtrar por Semana</label>
                     <select id="week-filter" class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
-                        <option value="">Todas las semanas</option>
+                        <option value="">Todos las semanas</option>
                     </select>
                 </div>
             </div>
@@ -228,7 +228,7 @@
             
             // --- Config URLs ---
             const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
-            const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+            const CORS_PROXY = 'https://corsproxy.io/?'; // Using a new CORS proxy
 
             // --- Initialization ---
             async function init() {
@@ -278,10 +278,10 @@
                 }
 
                 try {
-                    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(csvUrl)}`);
+                    // Fetch through the new proxy and get raw text
+                    const response = await fetch(`${CORS_PROXY}${csvUrl}`);
                     if (!response.ok) throw new Error(`HTTP error fetching CSV! status: ${response.status}`);
-                    const data = await response.json();
-                    const csvText = data.contents;
+                    const csvText = await response.text();
 
                     if (!csvText) throw new Error("El contenido del CSV está vacío.");
 
