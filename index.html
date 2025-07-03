@@ -191,7 +191,6 @@
                 updateToggleIcon(newTheme);
             }
 
-            // Initial theme setup
             const savedTheme = localStorage.getItem('theme') || 'system';
             applyTheme(savedTheme);
             updateToggleIcon(savedTheme);
@@ -224,18 +223,24 @@
             // --- State ---
             let allNewsletters = [];
             let activeKeyword = null;
-            let yearUrls = {}; // Holds the config { year: url }
+            let yearUrls = {};
             
             // --- Config URLs ---
             const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
-            const CORS_PROXY = 'https://corsproxy.io/?'; // Using a new CORS proxy
+            const CORS_PROXY = 'https://corsproxy.io/?';
+
+            // --- Utility Functions ---
+            const normalizeText = (text) => {
+                if (!text) return '';
+                return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            };
 
             // --- Initialization ---
             async function init() {
                 try {
                     const response = await fetch(CONFIG_URL);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    yearUrls = await response.json(); // Assign to the shared variable
+                    yearUrls = await response.json();
                     
                     populateYearSelector();
                     
@@ -249,7 +254,6 @@
                 }
             }
 
-            // --- Data Loading and Processing ---
             function populateYearSelector() {
                 const years = Object.keys(yearUrls).sort((a, b) => b - a);
                 if (years.length === 0) {
@@ -278,8 +282,7 @@
                 }
 
                 try {
-                    // Fetch through the new proxy and get raw text
-                    const response = await fetch(`${CORS_PROXY}${csvUrl}`);
+                    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(csvUrl)}`);
                     if (!response.ok) throw new Error(`HTTP error fetching CSV! status: ${response.status}`);
                     const csvText = await response.text();
 
@@ -289,7 +292,7 @@
                     
                     populateFilterOptions(allNewsletters);
                     populateKeywordCloud(allNewsletters);
-                    applyFilters(); // Use applyFilters to render initial cards
+                    applyFilters();
 
                 } catch (error) {
                     console.error(`Error loading data for year ${year}:`, error);
@@ -300,24 +303,67 @@
             }
             
             function parseCSV(text) {
-                const lines = text.split(/\r\n|\n/).slice(1);
-                return lines.map(line => {
-                    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-                    const cleanedValues = values.map(v => v.trim().replace(/^"|"$/g, ''));
-                    if (cleanedValues.length < 9) return null;
+                const rows = [];
+                let fields = [];
+                let currentField = '';
+                let inQuotes = false;
+
+                text = text.trim() + '\n';
+
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    const nextChar = text[i + 1];
+
+                    if (inQuotes) {
+                        if (char === '"' && nextChar === '"') {
+                            currentField += '"';
+                            i++;
+                        } else if (char === '"') {
+                            inQuotes = false;
+                        } else {
+                            currentField += char;
+                        }
+                    } else {
+                        if (char === '"') {
+                            inQuotes = true;
+                        } else if (char === ',') {
+                            fields.push(currentField);
+                            currentField = '';
+                        } else if (char === '\n' || char === '\r') {
+                            if (nextChar === '\n' && char === '\r') i++;
+                            
+                            fields.push(currentField);
+                            if (fields.length > 1 || (fields.length === 1 && fields[0] !== '')) {
+                                rows.push(fields);
+                            }
+                            fields = [];
+                            currentField = '';
+                        } else {
+                            currentField += char;
+                        }
+                    }
+                }
+
+                return rows.slice(1).map(values => {
+                    if (values.length < 9) return null;
+
+                    const keywordsRaw = values.slice(8)
+                        .flatMap(kwCell => kwCell.split(',')) // Split cells with commas
+                        .map(kw => kw.trim())
+                        .filter(kw => kw); // Remove empty strings
+
                     return {
-                        id: cleanedValues[1],
-                        title: cleanedValues[3],
-                        summary: cleanedValues[4],
-                        body: cleanedValues[5],
-                        link: cleanedValues[6],
-                        faq: cleanedValues[7],
-                        keywords: cleanedValues[8] ? cleanedValues[8].split(',').map(k => k.trim()) : []
+                        id: values[1].trim(),
+                        title: values[3].trim(),
+                        summary: values[4].trim(),
+                        body: values[5].trim(),
+                        link: values[6].trim(),
+                        faq: values[7].trim(),
+                        keywords: keywordsRaw
                     };
                 }).filter(item => item && item.id).sort((a, b) => b.id.localeCompare(a.id));
             }
 
-            // --- Rendering ---
             function renderCards(newsletters) {
                 newsletterGrid.innerHTML = '';
                 if (newsletters.length === 0) {
@@ -371,9 +417,15 @@
             }
             
             function populateKeywordCloud(newsletters) {
-                const keywordCounts = {};
-                newsletters.forEach(item => item.keywords.forEach(kw => { if(kw) keywordCounts[kw] = (keywordCounts[kw] || 0) + 1; }));
-                const sortedKeywords = Object.keys(keywordCounts).sort((a, b) => keywordCounts[b] - keywordCounts[a]);
+                const uniqueKeywords = new Map();
+                newsletters.flatMap(item => item.keywords).forEach(kw => {
+                    const normalized = normalizeText(kw);
+                    if (normalized && !uniqueKeywords.has(normalized)) {
+                        uniqueKeywords.set(normalized, kw); // Store original casing
+                    }
+                });
+
+                const sortedKeywords = [...uniqueKeywords.values()].sort((a, b) => a.localeCompare(b));
                 
                 if(sortedKeywords.length === 0) {
                     keywordCloudContainer.classList.add('hidden');
@@ -398,35 +450,51 @@
                 });
             }
 
-            // --- Filtering and Searching ---
             function applyFilters() {
-                const searchTerm = searchInput.value.toLowerCase();
+                const normalizedSearchTerm = normalizeText(searchInput.value);
                 const selectedMonth = monthFilter.value;
                 const selectedWeek = weekFilter.value;
+                const normalizedActiveKeyword = activeKeyword ? normalizeText(activeKeyword) : null;
                 
                 const filtered = allNewsletters.filter(item => {
                     const date = new Date(item.id);
                     if (isNaN(date.getTime())) return false;
+
                     const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
                     const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
-                    const keywordMatch = !activeKeyword || item.keywords.includes(activeKeyword);
-                    const searchMatch = searchTerm === '' ||
-                        item.title.toLowerCase().includes(searchTerm) ||
-                        item.summary.toLowerCase().includes(searchTerm) ||
-                        item.keywords.some(kw => kw.toLowerCase().includes(searchTerm));
+                    
+                    const keywordMatch = !normalizedActiveKeyword || item.keywords.some(kw => normalizeText(kw) === normalizedActiveKeyword);
+
+                    const searchMatch = normalizedSearchTerm === '' ||
+                        normalizeText(item.title).includes(normalizedSearchTerm) ||
+                        normalizeText(item.summary).includes(normalizedSearchTerm) ||
+                        item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
+
                     return monthMatch && weekMatch && keywordMatch && searchMatch;
                 });
                 renderCards(filtered);
             }
             
             function filterByKeyword(keyword) {
-                searchInput.value = keyword;
-                activeKeyword = null;
-                keywordCloud.querySelector('.tag.active')?.classList.remove('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
+                searchInput.value = ''; // Clear search when clicking a tag
+                if (activeKeyword === keyword) {
+                    activeKeyword = null;
+                } else {
+                    activeKeyword = keyword;
+                }
+                
+                // Visually update tags
+                keywordCloud.querySelectorAll('.tag').forEach(tagEl => {
+                    if (tagEl.textContent === activeKeyword) {
+                        tagEl.classList.add('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
+                    } else {
+                        tagEl.classList.remove('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
+                    }
+                });
+
                 applyFilters();
             }
 
-            // --- Modal Logic ---
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
@@ -451,14 +519,12 @@
                 document.body.style.overflow = 'auto';
             }
 
-            // --- UI Helpers ---
             function showLoader(show) { loader.style.display = show ? 'flex' : 'none'; }
             function showError(message) {
                 newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
                 showLoader(false);
             }
             
-            // --- Utility Functions ---
             function formatDate(idString) {
                 const date = new Date(idString);
                 if (isNaN(date.getTime())) return idString;
@@ -476,9 +542,7 @@
             }
 
             // --- Event Listeners ---
-            yearSelector.addEventListener('change', (e) => {
-                loadAndProcessData(e.target.value);
-            });
+            yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
             searchInput.addEventListener('input', applyFilters);
             monthFilter.addEventListener('change', applyFilters);
             weekFilter.addEventListener('change', applyFilters);
