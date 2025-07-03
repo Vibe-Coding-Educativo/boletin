@@ -55,55 +55,82 @@
         /* Light Theme Prose */
         .prose-custom { 
             color: #374151; 
-            line-height: 1.7;
+            line-height: 1.8;
             font-size: 16px;
+        }
+        .prose-custom.prose-lg {
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        .prose-custom.prose-sm {
+            font-size: 14px;
+            line-height: 1.7;
         }
         .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { 
             color: #111827; 
             font-weight: 700;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            line-height: 1.4;
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.3;
         }
-        .prose-custom h1 { font-size: 2rem; border-bottom: 3px solid #f59e0b; padding-bottom: 0.5rem; }
-        .prose-custom h2 { font-size: 1.5rem; border-bottom: 2px solid #fbbf24; padding-bottom: 0.3rem; }
-        .prose-custom h3 { font-size: 1.25rem; color: #d97706; }
-        .prose-custom h4 { font-size: 1.125rem; color: #92400e; }
-        .prose-custom p { margin-bottom: 1.25rem; }
-        .prose-custom ul, .prose-custom ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
-        .prose-custom li { margin-bottom: 0.5rem; }
+        .prose-custom h1 { font-size: 2.5rem; border-bottom: 3px solid #f59e0b; padding-bottom: 0.75rem; margin-top: 0; }
+        .prose-custom h2 { font-size: 1.875rem; border-bottom: 2px solid #fbbf24; padding-bottom: 0.5rem; }
+        .prose-custom h3 { font-size: 1.5rem; color: #d97706; }
+        .prose-custom h4 { font-size: 1.25rem; color: #92400e; }
+        .prose-custom p { margin-bottom: 1.5rem; }
+        .prose-custom ul, .prose-custom ol { margin-bottom: 1.5rem; padding-left: 1.75rem; }
+        .prose-custom li { margin-bottom: 0.75rem; }
         .prose-custom a { color: #c2410c; text-decoration: underline; }
         .prose-custom a:hover { color: #ea580c; }
         .prose-custom strong { color: #a16207; font-weight: 600; }
         .prose-custom blockquote { 
             border-left: 4px solid #f59e0b; 
             color: #4b5563; 
-            margin: 1.5rem 0;
-            padding-left: 1rem;
+            margin: 2rem 0;
+            padding-left: 1.5rem;
             font-style: italic;
             background-color: #fffbeb;
-            padding: 1rem;
-            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.1em;
         }
         .prose-custom code { 
             color: #be123c; 
             background-color: #f3f4f6; 
-            padding: 0.2em 0.4em; 
-            border-radius: 0.25rem;
+            padding: 0.25em 0.5em; 
+            border-radius: 0.375rem;
             font-size: 0.875em;
             font-family: 'Roboto Mono', monospace;
         }
         .prose-custom pre { 
             background-color: #f3f4f6; 
             color: #374151;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin: 1.5rem 0;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin: 2rem 0;
             overflow-x: auto;
         }
         .prose-custom pre code {
             background-color: transparent;
             padding: 0;
+        }
+
+        /* Reading mode */
+        .reading-mode #modal-sidebar {
+            display: none !important;
+        }
+        .reading-mode article {
+            max-width: 65ch; /* Optimal reading width */
+        }
+
+        /* Media container in new layout */
+        #modal-video-container:not(:empty) {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 2rem;
+            margin-bottom: 0;
+        }
+        .dark #modal-video-container:not(:empty) {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
         }
 
         /* Dark Theme Prose */
@@ -196,19 +223,64 @@
     </main>
 
     <!-- Modal for full newsletter -->
-    <div id="modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 id="modal-title" class="text-2xl font-bold text-amber-600 dark:text-amber-500"></h2>
-                <button id="modal-close" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-3xl">&times;</button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <div id="modal-video-container" class="mb-6"></div>
-                <div class="prose prose-custom max-w-none">
-                    <div id="modal-body"></div>
-                    <h3 class="text-xl font-semibold border-b border-slate-200 dark:border-slate-700 pb-2 mt-8 mb-4">Preguntas Frecuentes (FAQ)</h3>
-                    <div id="modal-faq"></div>
+    <div id="modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-0">
+        <div class="bg-white dark:bg-slate-900 w-full h-full flex flex-col">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 md:p-6 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm sticky top-0 z-10">
+                <div class="flex-1 min-w-0">
+                    <h2 id="modal-title" class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate pr-4"></h2>
+                    <p id="modal-date" class="text-sm text-amber-600 dark:text-amber-400 font-medium mt-1"></p>
                 </div>
+                <div class="flex items-center gap-3">
+                    <!-- Quick navigation -->
+                    <nav class="hidden md:flex items-center gap-3 text-sm">
+                        <button id="nav-content" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">Contenido</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button id="nav-faq" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">FAQ</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button id="toggle-reading-mode" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                        </button>
+                    </nav>
+                    <button id="modal-close" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-2xl p-1">&times;</button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 overflow-hidden">
+                <div class="h-full flex">
+                    <!-- Main content area -->
+                    <div class="flex-1 overflow-y-auto">
+                        <div class="max-w-4xl mx-auto">
+                            <!-- Media section -->
+                            <div id="modal-video-container" class="w-full"></div>
+                            
+                            <!-- Article-style content -->
+                            <article class="max-w-3xl mx-auto px-6 md:px-8 py-8">
+                                <div id="modal-body-content" class="prose prose-custom prose-lg max-w-none"></div>
+                            </article>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <aside id="modal-sidebar" class="hidden lg:block w-80 bg-slate-50 dark:bg-slate-800/50 border-l border-slate-200 dark:border-slate-700 overflow-y-auto">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
+                            <div id="modal-faq-content" class="prose prose-custom prose-sm max-w-none"></div>
+                        </div>
+                    </aside>
+                </div>
+                
+                <!-- Mobile FAQ section -->
+                <section id="mobile-faq" class="lg:hidden border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <div class="max-w-3xl mx-auto px-6 md:px-8 py-8">
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
+                        <div id="modal-faq-mobile" class="prose prose-custom max-w-none"></div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -280,10 +352,10 @@
             const noResults = document.getElementById('no-results');
             const modal = document.getElementById('modal');
             const modalClose = document.getElementById('modal-close');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const modalFaq = document.getElementById('modal-faq');
             const modalVideoContainer = document.getElementById('modal-video-container');
+            const navContent = document.getElementById('nav-content');
+            const navFaq = document.getElementById('nav-faq');
+            const toggleReadingMode = document.getElementById('toggle-reading-mode');
 
             // --- State ---
             let allNewsletters = [];
@@ -627,7 +699,7 @@
                 const youtubeId = getYouTubeID(link);
                 if (youtubeId) {
                     if (fullSize) {
-                        return `<div class="aspect-w-16 aspect-h-9"><iframe class="w-full h-full rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                        return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
                     } else {
                         return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                     }
@@ -635,12 +707,18 @@
                 
                 if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
                     const type = link.match(/\.(mp3|wav|ogg|m4a)$/i)[1];
-                    return `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                    const audioElement = fullSize 
+                        ? `<div class="w-full max-w-2xl mx-auto mb-8"><audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio></div>`
+                        : `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                    return audioElement;
                 }
 
                 if (link.includes('ivoox.com')) {
                     const embedLink = link.replace('_sq_f1', '_ep_1');
-                    return `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                    const ivooxElement = fullSize
+                        ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
+                        : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                    return ivooxElement;
                 }
 
                 return ''; // Return empty if no known media type is found
@@ -671,6 +749,24 @@
             modalClose.addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
             document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal(); });
+            
+            // New modal navigation
+            if (navContent) navContent.addEventListener('click', () => {
+                const contentElement = document.getElementById('modal-body-content');
+                if (contentElement) {
+                    contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+            if (navFaq) navFaq.addEventListener('click', () => {
+                // In desktop, scroll to sidebar; in mobile, scroll to mobile FAQ section
+                const isDesktop = window.innerWidth >= 1024;
+                const targetId = isDesktop ? 'modal-sidebar' : 'mobile-faq';
+                const element = document.getElementById(targetId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+            if (toggleReadingMode) toggleReadingMode.addEventListener('click', () => modal.classList.toggle('reading-mode'));
             
             // --- Start the application ---
             init();
