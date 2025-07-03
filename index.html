@@ -1114,15 +1114,27 @@
                 
                 const months = new Set();
                 const weeks = new Set();
+                let currentYear = null;
+                
                 newsletters.forEach(item => {
                     const date = item.dateInfo.startDate;
                     if (!date || isNaN(date.getTime())) return;
+                    
                     months.add(date.getMonth());
                     weeks.add(getWeekNumber(date));
+                    
+                    // Get the year from the newsletter data
+                    if (!currentYear) {
+                        currentYear = date.getFullYear();
+                    }
                 });
+                
                 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
                 monthFilter.innerHTML = '<option value="">Todos los meses</option>' + [...months].sort((a,b) => a-b).map(m => `<option value="${m}">${monthNames[m]}</option>`).join('');
-                weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">Semana ${w}</option>`).join('');
+                
+                // Use the current year or fall back to current date year
+                const yearForWeeks = currentYear || new Date().getFullYear();
+                weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">${formatWeekDisplay(w, yearForWeeks)}</option>`).join('');
             }
             
             function applyFilters() {
@@ -1411,22 +1423,42 @@
             function scrollToHeading(headingId) {
                 const heading = document.getElementById(headingId);
                 if (heading) {
-                    // Calculate offset for fixed header
-                    const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
-                    const elementPosition = heading.offsetTop;
-                    const offsetPosition = elementPosition - headerHeight - 20; // Extra 20px padding
-                    
                     // Get the scrollable container (the modal content area)
                     const scrollContainer = heading.closest('.overflow-y-auto');
+                    
                     if (scrollContainer) {
+                        // Calculate offset for fixed header and add extra padding
+                        const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
+                        const elementPosition = heading.offsetTop;
+                        const offsetPosition = elementPosition - headerHeight - 40; // Extra 40px padding for better readability
+                        
                         scrollContainer.scrollTo({
-                            top: offsetPosition,
+                            top: Math.max(0, offsetPosition), // Ensure we don't scroll to negative values
                             behavior: 'smooth'
                         });
                     } else {
-                        // Fallback to regular scroll
-                        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Fallback - scroll to start position with offset
+                        const headerHeight = 100; // Conservative estimate
+                        const targetPosition = heading.offsetTop - headerHeight;
+                        
+                        window.scrollTo({
+                            top: Math.max(0, targetPosition),
+                            behavior: 'smooth'
+                        });
                     }
+                    
+                    // Optional: Add a subtle highlight to the heading that was navigated to
+                    heading.style.background = 'linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 50%)';
+                    heading.style.paddingLeft = '1rem';
+                    heading.style.marginLeft = '-1rem';
+                    heading.style.transition = 'all 0.3s ease';
+                    
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        heading.style.background = '';
+                        heading.style.paddingLeft = '';
+                        heading.style.marginLeft = '';
+                    }, 2000);
                 }
             }
 
@@ -1534,6 +1566,47 @@
                 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
                 const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
                 return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            }
+            
+            function getWeekDates(weekNumber, year) {
+                // Get the first day of the year
+                const firstDay = new Date(year, 0, 1);
+                
+                // Calculate days to add to get to the start of the specified week
+                // Week 1 is the first week with 4+ days in the new year
+                const firstThursday = new Date(year, 0, 1 + (4 - firstDay.getDay() + 7) % 7);
+                const firstWeekStart = new Date(firstThursday);
+                firstWeekStart.setDate(firstThursday.getDate() - 3); // Go back to Monday
+                
+                // Calculate the start of the target week
+                const weekStart = new Date(firstWeekStart);
+                weekStart.setDate(firstWeekStart.getDate() + (weekNumber - 1) * 7);
+                
+                // Calculate the end of the week (Sunday)
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                return { start: weekStart, end: weekEnd };
+            }
+            
+            function formatWeekDisplay(weekNumber, year) {
+                const { start, end } = getWeekDates(weekNumber, year);
+                
+                const startDay = start.getDate();
+                const startMonth = start.toLocaleDateString('es-ES', { month: 'long' });
+                const endDay = end.getDate();
+                const endMonth = end.toLocaleDateString('es-ES', { month: 'long' });
+                
+                let dateRange;
+                if (start.getMonth() === end.getMonth()) {
+                    // Same month
+                    dateRange = `del ${startDay} al ${endDay} de ${startMonth}`;
+                } else {
+                    // Different months
+                    dateRange = `del ${startDay} de ${startMonth} al ${endDay} de ${endMonth}`;
+                }
+                
+                return `Semana ${weekNumber} (${dateRange})`;
             }
             
             function getYouTubeID(url) {
