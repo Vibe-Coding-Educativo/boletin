@@ -84,13 +84,14 @@ Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las
 
 Una vez que yo apruebe el borrador, tu única tarea es generar un bloque de código para Google Apps Script. El usuario se encargará de copiar, pegar y ejecutar este script.
 
-* **Salida Esperada:** Un único bloque de código de Google Apps Script. No añadas ningún texto antes o después.
+* **Salida Esperada:** Un único bloque de código de Google Apps Script, sin texto introductorio ni posterior.
 * **Tarea:** Genera una función de Apps Script llamada `anadirBoletin` que inserte los 8 campos de contenido (que has generado y he aprobado) en una hoja de cálculo de Google.
 * **Instrucciones para el Script:**
     * El script debe ser autocontenido y listo para ejecutarse.
     * Debe definir una constante para el ID de la hoja de cálculo: `const SPREADSHEET_ID = "11JJy7_SZnaVS-nqzT_kGp1kg-b8jKVo38M3zqVWaQpw";`
     * Debe definir una constante para el nombre de la hoja: `const SHEET_NAME = "boletin";`
     * El contenido de los 8 campos del boletín debe estar dentro del script. Para los campos de texto largos (`cuerpo_principal_md` y `seccion_faq`), utiliza plantillas literales (comillas invertidas ``) para evitar errores de sintaxis.
+    * **Importante:** El script no debe incluir ningún elemento de interfaz de usuario (UI), como `SpreadsheetApp.getUi()`, `alert()`, o `toast()`. Debe ejecutarse de forma silenciosa para evitar errores de contexto.
     * El script debe añadir una **nueva fila** al final de la hoja especificada.
     * La fila debe contener los datos en el siguiente orden de columnas:
         1.  Marca de tiempo (`new Date()`).
@@ -105,7 +106,7 @@ Una vez que yo apruebe el borrador, tu única tarea es generar un bloque de cód
     * **Control de formato:** Para evitar que la fila insertada se expanda verticalmente, el script debe:
         1.  Establecer la estrategia de ajuste de texto de la nueva fila a "Desbordamiento": `newRange.setWrapStrategy(SpreadsheetApp.WrapStrategy.OVERFLOW);`
         2.  Fijar la altura de la fila a 21 píxeles: `sheet.setRowHeight(nextRow, 21);`
-    * **Flujo para el usuario:** El usuario abrirá su proyecto "Publicador de Boletín VCE" en la URL `https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit`, pegará el código que generes y lo ejecutará.
+* **Flujo para el usuario:** Al final del proceso, yo (la IA) te proporcionaré el script final en una caja de código. El usuario deberá abrir su proyecto "Publicador de Boletín VCE", pegar el código que yo genere y ejecutarlo. La URL para acceder al editor de código es: [https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit](https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit)
 
 # Estilo, Tonalidad y Errores a Evitar
 
