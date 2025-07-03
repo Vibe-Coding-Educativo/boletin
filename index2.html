@@ -53,20 +53,74 @@
         }
 
         /* Light Theme Prose */
-        .prose-custom { color: #374151; }
-        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { color: #111827; }
-        .prose-custom a { color: #c2410c; }
-        .prose-custom strong { color: #a16207; }
-        .prose-custom blockquote { border-left-color: #f59e0b; color: #4b5563; }
-        .prose-custom code { color: #be123c; background-color: #f3f4f6; padding: 0.2em 0.4em; border-radius: 0.25rem; }
-        .prose-custom pre { background-color: #f3f4f6; color: #374151; }
+        .prose-custom { 
+            color: #374151; 
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { 
+            color: #111827; 
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+        .prose-custom h1 { font-size: 2rem; border-bottom: 3px solid #f59e0b; padding-bottom: 0.5rem; }
+        .prose-custom h2 { font-size: 1.5rem; border-bottom: 2px solid #fbbf24; padding-bottom: 0.3rem; }
+        .prose-custom h3 { font-size: 1.25rem; color: #d97706; }
+        .prose-custom h4 { font-size: 1.125rem; color: #92400e; }
+        .prose-custom p { margin-bottom: 1.25rem; }
+        .prose-custom ul, .prose-custom ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+        .prose-custom li { margin-bottom: 0.5rem; }
+        .prose-custom a { color: #c2410c; text-decoration: underline; }
+        .prose-custom a:hover { color: #ea580c; }
+        .prose-custom strong { color: #a16207; font-weight: 600; }
+        .prose-custom blockquote { 
+            border-left: 4px solid #f59e0b; 
+            color: #4b5563; 
+            margin: 1.5rem 0;
+            padding-left: 1rem;
+            font-style: italic;
+            background-color: #fffbeb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .prose-custom code { 
+            color: #be123c; 
+            background-color: #f3f4f6; 
+            padding: 0.2em 0.4em; 
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .prose-custom pre { 
+            background-color: #f3f4f6; 
+            color: #374151;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        .prose-custom pre code {
+            background-color: transparent;
+            padding: 0;
+        }
 
         /* Dark Theme Prose */
         .dark .prose-custom { color: #d1d5db; }
         .dark .prose-custom h1, .dark .prose-custom h2, .dark .prose-custom h3, .dark .prose-custom h4, .dark .prose-custom h5, .dark .prose-custom h6 { color: #f9fafb; }
+        .dark .prose-custom h1 { border-bottom-color: #f59e0b; }
+        .dark .prose-custom h2 { border-bottom-color: #fbbf24; }
+        .dark .prose-custom h3 { color: #fbbf24; }
+        .dark .prose-custom h4 { color: #fde047; }
         .dark .prose-custom a { color: #fb923c; }
+        .dark .prose-custom a:hover { color: #fdba74; }
         .dark .prose-custom strong { color: #fde047; }
-        .dark .prose-custom blockquote { border-left-color: #f59e0b; color: #9ca3af; }
+        .dark .prose-custom blockquote { 
+            border-left-color: #f59e0b; 
+            color: #9ca3af;
+            background-color: #1f2937;
+        }
         .dark .prose-custom code { color: #fda4af; background-color: #374151; }
         .dark .prose-custom pre { background-color: #1f2937; color: #d1d5db; }
         
