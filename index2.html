@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boletín Vibe Coding Educativo</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config -->
+    <script>
+        tailwind.config = {
+          darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
+        }
+    </script>
+    
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Basic styles and transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.1), 0 4px 6px -2px rgba(245, 158, 11, 0.05);
+        }
+        .tag {
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .loader {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Light Theme Prose */
+        .prose-custom { color: #374151; }
+        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { color: #111827; }
+        .prose-custom a { color: #c2410c; }
+        .prose-custom strong { color: #a16207; }
+        .prose-custom blockquote { border-left-color: #f59e0b; color: #4b5563; }
+        .prose-custom code { color: #be123c; background-color: #f3f4f6; padding: 0.2em 0.4em; border-radius: 0.25rem; }
+        .prose-custom pre { background-color: #f3f4f6; color: #374151; }
+
+        /* Dark Theme Prose */
+        .dark .prose-custom { color: #d1d5db; }
+        .dark .prose-custom h1, .dark .prose-custom h2, .dark .prose-custom h3, .dark .prose-custom h4, .dark .prose-custom h5, .dark .prose-custom h6 { color: #f9fafb; }
+        .dark .prose-custom a { color: #fb923c; }
+        .dark .prose-custom strong { color: #fde047; }
+        .dark .prose-custom blockquote { border-left-color: #f59e0b; color: #9ca3af; }
+        .dark .prose-custom code { color: #fda4af; background-color: #374151; }
+        .dark .prose-custom pre { background-color: #1f2937; color: #d1d5db; }
+        
+        audio {
+            filter: invert(0.1);
+        }
+        .dark audio {
+            filter: invert(1) sepia(1) saturate(0.5) hue-rotate(180deg);
+        }
+
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-lg sticky top-0 z-20 py-4 px-4 md:px-8">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                    Boletín Semanal <a href="https://t.me/vceduca" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-500 hover:underline">Vibe Coding Educativo</a>
+                </h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Resumen de conversaciones del grupo de Telegram</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="theme-toggle" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" aria-label="Cambiar tema">
+                    <!-- SVG icon will be injected here by JS -->
+                </button>
+                <select id="year-selector" class="bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50"></select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Filters and Search -->
+        <div class="mb-8 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="search-input" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Buscar</label>
+                    <input type="text" id="search-input" placeholder="Buscar por título, resumen..." class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="month-filter" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Filtrar por Mes</label>
+                    <select id="month-filter" class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
+                        <option value="">Todos los meses</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="week-filter" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Filtrar por Semana</label>
+                    <select id="week-filter" class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
+                        <option value="">Todos las semanas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword Cloud - Removed to reduce prominence -->
+
+        <!-- Loading Spinner -->
+        <div id="loader" class="flex justify-center items-center py-20">
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-slate-200 dark:border-slate-600 h-32 w-32" style="border-top-color: #f59e0b;"></div>
+        </div>
+        
+        <!-- No Results Message -->
+        <div id="no-results" class="text-center py-20 hidden">
+            <h2 class="text-2xl font-bold text-slate-600 dark:text-slate-400">No se encontraron boletines</h2>
+            <p class="text-slate-500 dark:text-slate-500 mt-2">Prueba a cambiar los filtros o el término de búsqueda.</p>
+        </div>
+
+        <!-- Newsletter Grid -->
+        <div id="newsletter-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </main>
+
+    <!-- Modal for full newsletter -->
+    <div id="modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+                <h2 id="modal-title" class="text-2xl font-bold text-amber-600 dark:text-amber-500"></h2>
+                <button id="modal-close" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-3xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div id="modal-video-container" class="mb-6"></div>
+                <div class="prose prose-custom max-w-none">
+                    <h3 class="text-xl font-semibold border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">Cuerpo del Boletín</h3>
+                    <div id="modal-body"></div>
+                    <h3 class="text-xl font-semibold border-b border-slate-200 dark:border-slate-700 pb-2 mt-8 mb-4">Preguntas Frecuentes (FAQ)</h3>
+                    <div id="modal-faq"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="page-footer" class="mt-12 py-6 border-t border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400 text-sm">
+        <p>Laboratorio de aplicaciones educativas - <a href="https://labia.tiddlyhost.com" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">labia.tiddlyhost.com</a></p>
+        <p>Aplicación hecha por Juan José de Haro - <a href="https://bilateria.org" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">bilateria.org</a></p>
+        <p><a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">Licencia Creative Commons BY-SA</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- THEME MANAGEMENT ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+            const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+            const systemIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`;
+
+            function applyTheme(theme) {
+                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            function updateToggleIcon(theme) {
+                if (theme === 'dark') {
+                    themeToggle.innerHTML = moonIcon;
+                } else if (theme === 'light') {
+                    themeToggle.innerHTML = sunIcon;
+                } else {
+                    themeToggle.innerHTML = systemIcon;
+                }
+            }
+
+            function cycleTheme() {
+                const currentTheme = localStorage.getItem('theme') || 'system';
+                let newTheme;
+                if (currentTheme === 'system') newTheme = 'light';
+                else if (currentTheme === 'light') newTheme = 'dark';
+                else newTheme = 'system';
+                
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+                updateToggleIcon(newTheme);
+            }
+
+            const savedTheme = localStorage.getItem('theme') || 'system';
+            applyTheme(savedTheme);
+            updateToggleIcon(savedTheme);
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if (localStorage.getItem('theme') === 'system') {
+                    applyTheme('system');
+                }
+            });
+            themeToggle.addEventListener('click', cycleTheme);
+
+
+            // --- DOM Elements ---
+            const yearSelector = document.getElementById('year-selector');
+            const searchInput = document.getElementById('search-input');
+            const monthFilter = document.getElementById('month-filter');
+            const weekFilter = document.getElementById('week-filter');
+            const newsletterGrid = document.getElementById('newsletter-grid');
+            const loader = document.getElementById('loader');
+            const noResults = document.getElementById('no-results');
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalFaq = document.getElementById('modal-faq');
+            const modalVideoContainer = document.getElementById('modal-video-container');
+
+            // --- State ---
+            let allNewsletters = [];
+            let yearUrls = {};
+            
+            // --- Config URLs ---
+            const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
+            const CORS_PROXY = 'https://corsproxy.io/?';
+
+            // --- Utility Functions ---
+            const normalizeText = (text) => {
+                if (!text) return '';
+                return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            };
+
+            // --- Initialization ---
+            async function init() {
+                try {
+                    const response = await fetch(CONFIG_URL);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    yearUrls = await response.json();
+                    
+                    populateYearSelector();
+                    
+                    const selectedYear = yearSelector.value;
+                    if (selectedYear) {
+                        await loadAndProcessData(selectedYear);
+                    }
+                } catch (error) {
+                    console.error("Error initializing app:", error);
+                    showError("No se pudo cargar la configuración inicial.");
+                }
+            }
+
+            function populateYearSelector() {
+                const years = Object.keys(yearUrls).sort((a, b) => b - a);
+                if (years.length === 0) {
+                    showError("No se encontraron años en la configuración.");
+                    return;
+                }
+                
+                yearSelector.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join('');
+                
+                const currentYear = new Date().getFullYear().toString();
+                if (years.includes(currentYear)) {
+                    yearSelector.value = currentYear;
+                }
+            }
+
+            async function loadAndProcessData(year) {
+                showLoader(true);
+                newsletterGrid.innerHTML = '';
+                noResults.classList.add('hidden');
+                
+                const csvUrl = yearUrls[year];
+                if (!csvUrl) {
+                    showError(`No se encontró URL para el año ${year}.`);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(csvUrl)}`);
+                    if (!response.ok) throw new Error(`HTTP error fetching CSV! status: ${response.status}`);
+                    const csvText = await response.text();
+
+                    if (!csvText) throw new Error("El contenido del CSV está vacío.");
+
+                    allNewsletters = parseCSV(csvText);
+                    
+                    populateFilterOptions(allNewsletters);
+                    applyFilters();
+
+                } catch (error) {
+                    console.error(`Error loading data for year ${year}:`, error);
+                    showError(`No se pudo cargar los datos del boletín para el año ${year}.`);
+                } finally {
+                    showLoader(false);
+                }
+            }
+            
+            function parseCSV(text) {
+                const rows = [];
+                let fields = [];
+                let currentField = '';
+                let inQuotes = false;
+
+                text = text.trim() + '\n';
+
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    const nextChar = text[i + 1];
+
+                    if (inQuotes) {
+                        if (char === '"' && nextChar === '"') {
+                            currentField += '"';
+                            i++;
+                        } else if (char === '"') {
+                            inQuotes = false;
+                        } else {
+                            currentField += char;
+                        }
+                    } else {
+                        if (char === '"') {
+                            inQuotes = true;
+                        } else if (char === ',') {
+                            fields.push(currentField);
+                            currentField = '';
+                        } else if (char === '\n' || char === '\r') {
+                            if (nextChar === '\n' && char === '\r') i++;
+                            
+                            fields.push(currentField);
+                            if (fields.length > 1 || (fields.length === 1 && fields[0] !== '')) {
+                                rows.push(fields);
+                            }
+                            fields = [];
+                            currentField = '';
+                        } else {
+                            currentField += char;
+                        }
+                    }
+                }
+
+                return rows.slice(1).map(values => {
+                    if (values.length < 9) return null;
+
+                    const keywordsRaw = values.slice(8)
+                        .flatMap(kwCell => kwCell.split(','))
+                        .map(kw => kw.trim())
+                        .filter(kw => kw);
+
+                    return {
+                        id: values[1].trim(),
+                        dateInfo: parseIdToDateInfo(values[1].trim()),
+                        title: values[3].trim(),
+                        summary: values[4].trim(),
+                        body: values[5].trim(),
+                        link: values[6].trim(),
+                        faq: values[7].trim(),
+                        keywords: keywordsRaw
+                    };
+                }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
+            }
+
+            function renderCards(newsletters) {
+                newsletterGrid.innerHTML = '';
+                if (newsletters.length === 0) {
+                    noResults.classList.remove('hidden');
+                    return;
+                }
+                noResults.classList.add('hidden');
+
+                newsletters.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
+                    
+                    const mediaEmbedHTML = generateMediaEmbed(item.link);
+
+                    card.innerHTML = `
+                        <div class="p-5 flex-grow flex flex-col">
+                            <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                ${item.keywords.slice(0, 3).map(kw => `<span class="tag text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300">${kw}</span>`).join('')}
+                                ${item.keywords.length > 3 ? `<span class="text-xs text-slate-400 dark:text-slate-500">+${item.keywords.length - 3} más</span>` : ''}
+                            </div>
+                        </div>
+                        ${mediaEmbedHTML ? `
+                        <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
+                            ${mediaEmbedHTML}
+                        </div>
+                        ` : ''}
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
+                            <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
+                                Ver cuerpo completo y FAQ &rarr;
+                            </button>
+                        </div>
+                    `;
+                    newsletterGrid.appendChild(card);
+                });
+            }
+            
+            function populateFilterOptions(newsletters) {
+                const months = new Set();
+                const weeks = new Set();
+                newsletters.forEach(item => {
+                    const date = item.dateInfo.startDate;
+                    if (!date || isNaN(date.getTime())) return;
+                    months.add(date.getMonth());
+                    weeks.add(getWeekNumber(date));
+                });
+                const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                monthFilter.innerHTML = '<option value="">Todos los meses</option>' + [...months].sort((a,b) => a-b).map(m => `<option value="${m}">${monthNames[m]}</option>`).join('');
+                weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">Semana ${w}</option>`).join('');
+            }
+            
+            function applyFilters() {
+                const normalizedSearchTerm = normalizeText(searchInput.value);
+                const selectedMonth = monthFilter.value;
+                const selectedWeek = weekFilter.value;
+                
+                const filtered = allNewsletters.filter(item => {
+                    try {
+                        const date = item.dateInfo.startDate;
+                        if (!date || isNaN(date.getTime())) return false;
+
+                        const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
+                        const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
+                        
+                        const searchMatch = normalizedSearchTerm === '' ||
+                            normalizeText(item.title).includes(normalizedSearchTerm) ||
+                            normalizeText(item.summary).includes(normalizedSearchTerm) ||
+                            item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
+
+                        return monthMatch && weekMatch && searchMatch;
+                    } catch (e) {
+                        console.error("Error filtering item:", item, e);
+                        return false;
+                    }
+                });
+                renderCards(filtered);
+            }
+            
+            function openModal(id) {
+                const item = allNewsletters.find(n => n.id === id);
+                if (!item) return;
+                modalTitle.textContent = item.title;
+                modalBody.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
+                modalFaq.innerHTML = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
+                modalVideoContainer.innerHTML = generateMediaEmbed(item.link, true); // Use full embed in modal
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+
+            function showLoader(show) { loader.style.display = show ? 'flex' : 'none'; }
+            function showError(message) {
+                newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
+                showLoader(false);
+            }
+            
+            function parseIdToDateInfo(idString) {
+                if (!idString || typeof idString !== 'string') {
+                    return { startDate: null, endDate: null, displayDate: 'Fecha no disponible' };
+                }
+                const parts = idString.split('_');
+                if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString };
+                
+                const startDate = new Date(parts[1]);
+                const endDate = new Date(parts[2]);
+
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                     return { startDate: null, endDate: null, displayDate: 'Fecha inválida' };
+                }
+
+                const startDay = startDate.toLocaleDateString('es-ES', { day: 'numeric' });
+                const startMonth = startDate.toLocaleDateString('es-ES', { month: 'long' });
+                const endDay = endDate.toLocaleDateString('es-ES', { day: 'numeric' });
+                const endMonth = endDate.toLocaleDateString('es-ES', { month: 'long' });
+                const year = endDate.getFullYear();
+
+                let displayDate;
+                if (startMonth === endMonth) {
+                    displayDate = `Semana del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
+                } else {
+                    displayDate = `Semana del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
+                }
+                
+                return { startDate, endDate, displayDate };
+            }
+
+            function getWeekNumber(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            }
+            
+            function getYouTubeID(url) {
+                if(!url) return null;
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            }
+
+            function generateMediaEmbed(link, fullSize = false) {
+                if (!link) return '';
+                
+                const youtubeId = getYouTubeID(link);
+                if (youtubeId) {
+                    if (fullSize) {
+                        return `<div class="aspect-w-16 aspect-h-9"><iframe class="w-full h-full rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                    } else {
+                        return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                    }
+                }
+                
+                if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                    const type = link.match(/\.(mp3|wav|ogg|m4a)$/i)[1];
+                    return `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                }
+
+                if (link.includes('ivoox.com')) {
+                    const embedLink = link.replace('_sq_f1', '_ep_1');
+                    return `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                }
+
+                return ''; // Return empty if no known media type is found
+            }
+
+            // --- Event Listeners ---
+            document.body.addEventListener('click', function(event) {
+                if (event.target.classList.contains('read-more-btn')) {
+                    openModal(event.target.dataset.id);
+                }
+            });
+            yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
+            searchInput.addEventListener('input', applyFilters);
+            monthFilter.addEventListener('change', applyFilters);
+            weekFilter.addEventListener('change', applyFilters);
+            modalClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal(); });
+            
+            // --- Start the application ---
+            init();
+        });
+    </script>
+</body>
+</html>
