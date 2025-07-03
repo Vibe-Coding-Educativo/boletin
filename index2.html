@@ -397,6 +397,37 @@
             margin: 0 auto;
         }
 
+        /* Toast notifications */
+        #toast {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        
+        /* Card highlight effect for direct links */
+        .card-highlighted {
+            animation: highlight-pulse 2s ease-in-out;
+        }
+        
+        @keyframes highlight-pulse {
+            0%, 100% { 
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 0 3px #f59e0b, 0 20px 25px -5px rgba(245, 158, 11, 0.2);
+                transform: scale(1.02);
+            }
+        }
+
+        /* Share button in cards */
+        .share-btn {
+            transition: all 0.2s ease-in-out;
+            opacity: 0.7;
+        }
+        .share-btn:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -474,6 +505,15 @@
                         <button id="nav-content" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">Contenido</button>
                         <span class="text-slate-300 dark:text-slate-600">|</span>
                         <button id="nav-faq" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">FAQ</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button id="modal-share" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors flex items-center gap-1" title="Copiar enlace directo">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                <polyline points="16,6 12,2 8,6"/>
+                                <line x1="12" y1="2" x2="12" y2="15"/>
+                            </svg>
+                            Compartir
+                        </button>
                         <span class="text-slate-300 dark:text-slate-600">|</span>
                         <button id="toggle-reading-mode" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -589,6 +629,122 @@
             const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
             const CORS_PROXY = 'https://corsproxy.io/?';
 
+            // --- URL Management ---
+            function updateURLWithCard(cardId) {
+                const url = new URL(window.location);
+                url.searchParams.set('boletin', cardId);
+                window.history.replaceState({}, '', url);
+                
+                // Copy to clipboard with specific message
+                copyToClipboard(url.toString(), '📖 Enlace del boletín copiado automáticamente');
+            }
+
+            function getCardIdFromURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('boletin');
+            }
+
+            function copyToClipboard(text, message = 'Copiado al portapapeles') {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(message);
+                }).catch(err => {
+                    console.error('Error al copiar al portapapeles:', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast(message);
+                    } catch (err) {
+                        showToast('No se pudo copiar automáticamente', 'error');
+                    }
+                    document.body.removeChild(textArea);
+                });
+            }
+
+            function showToast(message, type = 'success') {
+                // Remove any existing toast
+                const existingToast = document.getElementById('toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+
+                const toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
+                    type === 'error' 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-green-500 text-white'
+                }`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => toast.classList.add('translate-x-0'), 10);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            function scrollToCard(cardId) {
+                // First check if the card exists in current newsletters
+                const cardExists = allNewsletters.some(item => item.id === cardId);
+                
+                if (!cardExists) {
+                    // Try to find the card in other years
+                    const yearSelector = document.getElementById('year-selector');
+                    if (yearSelector) {
+                        const years = Array.from(yearSelector.options).map(option => option.value);
+                        // For now, we'll just show a message. In a real app, you might want to load other years.
+                        showToast('Boletín no encontrado en el año actual', 'error');
+                        return;
+                    }
+                }
+
+                // Clear filters to ensure the card is visible
+                const searchInput = document.getElementById('search-input');
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (searchInput) searchInput.value = '';
+                if (monthFilter) monthFilter.value = '';
+                if (weekFilter) weekFilter.value = '';
+                activeKeywords = [];
+                
+                // Re-render to ensure the card is visible
+                applyFilters();
+                
+                // Wait for render to complete, then scroll
+                setTimeout(() => {
+                    const targetCard = document.querySelector(`[data-id="${cardId}"]`);
+                    if (targetCard) {
+                        const card = targetCard.closest('.card');
+                        if (card) {
+                            card.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                            
+                            // Add highlight effect
+                            card.classList.add('card-highlighted');
+                            setTimeout(() => {
+                                card.classList.remove('card-highlighted');
+                            }, 2000);
+                            
+                            showToast('📍 Navegado al boletín seleccionado');
+                        }
+                    } else {
+                        showToast('Boletín no encontrado', 'error');
+                    }
+                }, 500);
+            }
+
             // --- Utility Functions ---
             const normalizeText = (text) => {
                 if (!text) return '';
@@ -647,6 +803,15 @@
                     const selectedYear = yearSelector ? yearSelector.value : null;
                     if (selectedYear) {
                         await loadAndProcessData(selectedYear);
+                        
+                        // Check if there's a specific card to navigate to
+                        const targetCardId = getCardIdFromURL();
+                        if (targetCardId) {
+                            // Wait a bit more for cards to render, then scroll to target
+                            setTimeout(() => {
+                                scrollToCard(targetCardId);
+                            }, 1000);
+                        }
                     }
                 } catch (error) {
                     console.error("Error initializing app:", error);
@@ -819,7 +984,18 @@
 
                         card.innerHTML = `
                             <div class="p-5 flex-grow flex flex-col">
-                                <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="text-sm text-amber-600 dark:text-amber-400 font-semibold">${item.dateInfo.displayDate}</p>
+                                    <button class="share-btn text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 p-1 rounded" 
+                                            data-share-id="${item.id}" 
+                                            title="Copiar enlace directo">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                            <polyline points="16,6 12,2 8,6"/>
+                                            <line x1="12" y1="2" x2="12" y2="15"/>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
                                 <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
                                 <div class="flex flex-wrap gap-1 mt-2">
@@ -1021,6 +1197,9 @@
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
                 
+                // Update URL and copy to clipboard
+                updateURLWithCard(id);
+                
                 // Pause any currently playing audio when opening a new modal
                 pauseCurrentAudio();
                 
@@ -1123,6 +1302,11 @@
             function closeModal() {
                 const modal = document.getElementById('modal');
                 if (!modal) return;
+                
+                // Clear URL parameter when closing modal
+                const url = new URL(window.location);
+                url.searchParams.delete('boletin');
+                window.history.replaceState({}, '', url);
                 
                 // Start transition by removing flex class
                 modal.classList.remove('flex');
@@ -1352,6 +1536,17 @@
                     const headingId = event.target.dataset.headingId;
                     scrollToHeading(headingId);
                 }
+                // Handle share button clicks
+                if (event.target.closest('.share-btn')) {
+                    event.stopPropagation();
+                    const shareBtn = event.target.closest('.share-btn');
+                    const cardId = shareBtn.dataset.shareId;
+                    if (cardId) {
+                        const url = new URL(window.location);
+                        url.searchParams.set('boletin', cardId);
+                        copyToClipboard(url.toString(), '🔗 Enlace directo copiado al portapapeles');
+                    }
+                }
             });
             
             // Get elements for event listeners
@@ -1364,6 +1559,7 @@
             const navContent = document.getElementById('nav-content');
             const navFaq = document.getElementById('nav-faq');
             const toggleReadingModeBtn = document.getElementById('toggle-reading-mode');
+            const modalShare = document.getElementById('modal-share');
             
             if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
             if (searchInput) searchInput.addEventListener('input', applyFilters);
@@ -1375,6 +1571,12 @@
             }
             document.addEventListener('keydown', (e) => { 
                 if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
+            });
+            
+            // Modal share button
+            if (modalShare) modalShare.addEventListener('click', () => {
+                const currentUrl = window.location.href;
+                copyToClipboard(currentUrl, '🔗 Enlace del boletín copiado al portapapeles');
             });
             
             // New modal navigation
