@@ -144,6 +144,23 @@
             scroll-behavior: smooth;
         }
 
+        /* Table of Contents styles */
+        #modal-faq-content nav a, #mobile-section-content nav a {
+            display: block;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        #modal-faq-content nav a:hover, #mobile-section-content nav a:hover {
+            background-color: rgb(241 245 249); /* slate-100 */
+            color: rgb(217 119 6); /* amber-600 */
+            transform: translateX(4px);
+        }
+        .dark #modal-faq-content nav a:hover, .dark #mobile-section-content nav a:hover {
+            background-color: rgb(51 65 85); /* slate-700 */
+            color: rgb(251 191 36); /* amber-400 */
+        }
+
         /* Header transitions */
         #modal .sticky {
             transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;
@@ -467,11 +484,11 @@
                     </aside>
                 </div>
                 
-                <!-- Mobile FAQ section -->
-                <section id="mobile-faq" class="lg:hidden border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <!-- Mobile FAQ/TOC section -->
+                <section id="mobile-content-section" class="lg:hidden border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                     <div class="max-w-3xl mx-auto px-6 md:px-8 py-8">
-                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
-                        <div id="modal-faq-mobile" class="prose prose-custom max-w-none"></div>
+                        <h3 id="mobile-section-title" class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
+                        <div id="mobile-section-content" class="prose prose-custom max-w-none"></div>
                     </div>
                 </section>
             </div>
@@ -864,6 +881,60 @@
                 return processed;
             }
 
+            function processExternalLinks(htmlContent) {
+                // Create a temporary div to parse HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                // Find all links
+                const links = tempDiv.querySelectorAll('a[href]');
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    // Check if it's an external link (starts with http/https and is not an anchor)
+                    if (href && (href.startsWith('http://') || href.startsWith('https://')) && !href.startsWith('#')) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                    }
+                });
+                
+                return tempDiv.innerHTML;
+            }
+
+            function generateTableOfContents(htmlContent) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                if (headings.length === 0) {
+                    return '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>';
+                }
+                
+                let tocHtml = '<nav class="space-y-2">';
+                headings.forEach((heading, index) => {
+                    const level = parseInt(heading.tagName.charAt(1));
+                    const text = heading.textContent.trim();
+                    const id = `heading-${index}`;
+                    
+                    // Add ID to the original heading for navigation
+                    heading.id = id;
+                    
+                    // Calculate indentation based on heading level
+                    const indent = (level - 1) * 0.75; // 0.75rem per level
+                    
+                    tocHtml += `
+                        <a href="#${id}" 
+                           class="block text-sm hover:text-amber-600 dark:hover:text-amber-400 transition-colors py-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                           style="margin-left: ${indent}rem;"
+                           onclick="scrollToHeading('${id}')">
+                            ${text}
+                        </a>
+                    `;
+                });
+                tocHtml += '</nav>';
+                
+                return tocHtml;
+            }
+
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
@@ -910,28 +981,44 @@
                     mangle: false
                 });
 
+                // Store the current item for TOC generation
+                window.currentNewsletterItem = item;
+
                 // Load content with delay for smooth transition
                 setTimeout(() => {
                     // Set content
                     if (bodyElement) {
                         const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
-                        bodyElement.innerHTML = marked.parse(processedBody);
+                        let htmlContent = marked.parse(processedBody);
+                        htmlContent = processExternalLinks(htmlContent);
+                        bodyElement.innerHTML = htmlContent;
                         bodyElement.style.opacity = '1';
                         bodyElement.classList.add('content-fade-in');
+                        
+                        // Generate and store TOC
+                        window.currentTOC = generateTableOfContents(htmlContent);
                     }
                     
                     // Set FAQ (both desktop sidebar and mobile)
                     const processedFaq = processMarkdownContent(item.faq || '*No hay preguntas frecuentes.*');
-                    const faqContent = marked.parse(processedFaq);
+                    let faqContent = marked.parse(processedFaq);
+                    faqContent = processExternalLinks(faqContent);
                     if (faqDesktopElement) {
                         faqDesktopElement.innerHTML = faqContent;
                         faqDesktopElement.style.opacity = '1';
                         faqDesktopElement.classList.add('content-fade-in');
                     }
-                    if (faqMobileElement) {
-                        faqMobileElement.innerHTML = faqContent;
-                        faqMobileElement.style.opacity = '1';
-                        faqMobileElement.classList.add('content-fade-in');
+                    
+                    // Set mobile section (initially FAQ)
+                    const mobileSectionContent = document.getElementById('mobile-section-content');
+                    const mobileSectionTitle = document.getElementById('mobile-section-title');
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = faqContent;
+                        mobileSectionContent.style.opacity = '1';
+                        mobileSectionContent.classList.add('content-fade-in');
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Preguntas Frecuentes';
                     }
                     
                     // Set media
@@ -954,7 +1041,71 @@
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     document.body.style.overflow = 'auto';
+                    // Clean up global variables
+                    window.currentNewsletterItem = null;
+                    window.currentTOC = null;
                 }, 400); // Match the enhanced CSS transition duration
+            }
+
+            function scrollToHeading(headingId) {
+                const heading = document.getElementById(headingId);
+                if (heading) {
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            function showTableOfContents() {
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const sidebarTitle = document.querySelector('#modal-sidebar h3');
+                const mobileSectionContent = document.getElementById('mobile-section-content');
+                const mobileSectionTitle = document.getElementById('mobile-section-title');
+                
+                if (window.currentTOC) {
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = window.currentTOC;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Índice de Contenido';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = window.currentTOC;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Índice de Contenido';
+                    }
+                }
+            }
+
+            function showFAQ() {
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const sidebarTitle = document.querySelector('#modal-sidebar h3');
+                const mobileSectionContent = document.getElementById('mobile-section-content');
+                const mobileSectionTitle = document.getElementById('mobile-section-title');
+                
+                if (window.currentNewsletterItem) {
+                    const processedFaq = processMarkdownContent(window.currentNewsletterItem.faq || '*No hay preguntas frecuentes.*');
+                    let faqContent = marked.parse(processedFaq);
+                    faqContent = processExternalLinks(faqContent);
+                    
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = faqContent;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = faqContent;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                }
             }
 
             function showLoader(show) { 
@@ -1091,24 +1242,44 @@
             
             // New modal navigation
             if (navContent) navContent.addEventListener('click', () => {
-                const contentElement = document.getElementById('modal-body-content');
-                if (contentElement) {
-                    contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Show table of contents in sidebar
+                showTableOfContents();
+                
+                // Scroll to content on mobile/when sidebar not visible
+                const isDesktop = window.innerWidth >= 1024;
+                if (isDesktop) {
+                    const contentElement = document.getElementById('modal-body-content');
+                    if (contentElement) {
+                        contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } else {
+                    // On mobile, scroll to the mobile content section (now showing TOC)
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             });
             if (navFaq) navFaq.addEventListener('click', () => {
-                // In desktop, scroll to sidebar; in mobile, scroll to mobile FAQ section
+                // Show FAQ in sidebar
+                showFAQ();
+                
+                // In mobile, scroll to mobile section
                 const isDesktop = window.innerWidth >= 1024;
-                const targetId = isDesktop ? 'modal-sidebar' : 'mobile-faq';
-                const element = document.getElementById(targetId);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (!isDesktop) {
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             });
             if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
                 const modal = document.getElementById('modal');
                 if (modal) modal.classList.toggle('reading-mode');
             });
+            
+            // Make scrollToHeading globally available
+            window.scrollToHeading = scrollToHeading;
             
             // --- Start the application ---
             init();
