@@ -235,6 +235,7 @@
             // --- State ---
             let allNewsletters = [];
             let activeKeywords = [];
+            let expandedCards = new Set();
             let yearUrls = {};
             
             // --- Config URLs ---
@@ -285,6 +286,7 @@
                 showLoader(true);
                 newsletterGrid.innerHTML = '';
                 noResults.classList.add('hidden');
+                expandedCards.clear(); // Reset expanded cards when loading new data
                 
                 const csvUrl = yearUrls[year];
                 if (!csvUrl) {
@@ -388,6 +390,23 @@
                     card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
                     
                     const mediaEmbedHTML = generateMediaEmbed(item.link);
+                    const isExpanded = expandedCards.has(item.id);
+                    const keywordsToShow = isExpanded ? item.keywords : item.keywords.slice(0, 3);
+                    
+                    const keywordTags = keywordsToShow.map(kw => {
+                        const isActive = activeKeywords.includes(kw);
+                        const activeClass = isActive ? 'bg-amber-500 text-slate-800 dark:text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300';
+                        return `<span class="tag text-xs px-2 py-0.5 rounded ${activeClass}">${kw}</span>`;
+                    }).join('');
+                    
+                    const remainingCount = item.keywords.length - 3;
+                    const expandButton = !isExpanded && remainingCount > 0 
+                        ? `<span class="expand-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">+${remainingCount} más</span>` 
+                        : '';
+                    
+                    const collapseButton = isExpanded && item.keywords.length > 3
+                        ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
+                        : '';
 
                     card.innerHTML = `
                         <div class="p-5 flex-grow flex flex-col">
@@ -395,8 +414,9 @@
                             <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
                             <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
                             <div class="flex flex-wrap gap-1 mt-2">
-                                ${item.keywords.slice(0, 3).map(kw => `<span class="tag text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300">${kw}</span>`).join('')}
-                                ${item.keywords.length > 3 ? `<span class="text-xs text-slate-400 dark:text-slate-500">+${item.keywords.length - 3} más</span>` : ''}
+                                ${keywordTags}
+                                ${expandButton}
+                                ${collapseButton}
                             </div>
                         </div>
                         ${mediaEmbedHTML ? `
@@ -467,15 +487,17 @@
                     activeKeywords.push(keyword);
                 }
                 
-                document.querySelectorAll('.tag').forEach(tagEl => {
-                    if (activeKeywords.includes(tagEl.textContent)) {
-                        tagEl.classList.add('active');
-                    } else {
-                        tagEl.classList.remove('active');
-                    }
-                });
-
                 applyFilters();
+            }
+            
+            function expandCardKeywords(cardId) {
+                expandedCards.add(cardId);
+                applyFilters(); // Re-render to show expanded keywords
+            }
+            
+            function collapseCardKeywords(cardId) {
+                expandedCards.delete(cardId);
+                applyFilters(); // Re-render to show collapsed keywords
             }
             
             function openModal(id) {
@@ -579,6 +601,14 @@
                 }
                 if (event.target.classList.contains('read-more-btn')) {
                     openModal(event.target.dataset.id);
+                }
+                if (event.target.classList.contains('expand-keywords')) {
+                    event.stopPropagation();
+                    expandCardKeywords(event.target.dataset.cardId);
+                }
+                if (event.target.classList.contains('collapse-keywords')) {
+                    event.stopPropagation();
+                    collapseCardKeywords(event.target.dataset.cardId);
                 }
             });
             yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
