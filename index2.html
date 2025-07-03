@@ -6,12 +6,7 @@
     <title>Boletín Vibe Coding Educativo</title>
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/3.4.0"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Marked.js for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -555,6 +550,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Configure Tailwind with a delay to ensure it's loaded
+            setTimeout(() => {
+                if (typeof tailwind !== 'undefined' && tailwind.config) {
+                    try {
+                        tailwind.config = {
+                            darkMode: 'class'
+                        };
+                    } catch (e) {
+                        console.warn('Tailwind config failed:', e);
+                    }
+                }
+            }, 100);
+            
             // Configure marked.js to open all links in new tab
             const renderer = new marked.Renderer();
             renderer.link = function(href, title, text) {
@@ -702,7 +710,8 @@
 
                 } catch (error) {
                     console.error(`Error loading data for year ${year}:`, error);
-                    showError(`No se pudo cargar los datos del boletín para el año ${year}.`);
+                    const errorMsg = `No se pudo cargar los datos del boletín para el año ${year}.`;
+                    showError(errorMsg);
                 } finally {
                     showLoader(false);
                 }
@@ -758,14 +767,21 @@
                         .map(kw => kw.trim())
                         .filter(kw => kw);
 
+                    const title = (values[3] || '').trim();
+                    const summary = (values[4] || '').trim();
+                    const body = (values[5] || '').trim();
+                    const link = (values[6] || '').trim();
+                    const faq = (values[7] || '').trim();
+                    const id = (values[1] || '').trim();
+
                     return {
-                        id: values[1].trim(),
-                        dateInfo: parseIdToDateInfo(values[1].trim()),
-                        title: values[3].trim(),
-                        summary: values[4].trim(),
-                        body: values[5].trim(),
-                        link: values[6].trim(),
-                        faq: values[7].trim(),
+                        id: id,
+                        dateInfo: parseIdToDateInfo(id),
+                        title: title,
+                        summary: summary,
+                        body: body,
+                        link: link,
+                        faq: faq,
                         keywords: keywordsRaw
                     };
                 }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
@@ -843,11 +859,7 @@
                                     ${collapseButton}
                                 </div>
                             </div>
-                            ${mediaEmbedHTML ? `
-                            <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
-                                ${mediaEmbedHTML}
-                            </div>
-                            ` : ''}
+                            ${mediaEmbedHTML ? `<div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">${mediaEmbedHTML}</div>` : ''}
                             <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
                                 <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
                                     Ver cuerpo completo y FAQ &rarr;
@@ -1042,21 +1054,33 @@
 
             function generateTableOfContents(markdown) {
                 const headings = [];
+                if (!markdown) return headings;
+                
                 const lines = markdown.split('\n');
                 
                 lines.forEach((line, index) => {
-                    const match = line.match(/^(#{1,4})\s+(.+)/);
-                    if (match) {
-                        const level = match[1].length;
-                        const text = match[2].trim()
-                            .replace(/\*/g, '') // Remove markdown bold/italic
-                            .replace(/`/g, '') // Remove inline code
-                            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Convert links to just text
-                        const id = `heading-${index}-${text.toLowerCase()
-                            .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-                            .replace(/\s+/g, '-') // Replace spaces with hyphens
-                            .replace(/^-+|-+$/g, '')}`; // Remove leading/trailing hyphens
-                        headings.push({ level, text, id });
+                    try {
+                        const match = line.match(/^(#{1,4})\s+(.+)/);
+                        if (match) {
+                            const level = match[1].length;
+                            let text = match[2].trim();
+                            
+                            // Clean markdown from text
+                            text = text
+                                .replace(/\*/g, '') // Remove markdown bold/italic
+                                .replace(/`/g, '') // Remove inline code
+                                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Convert links to just text
+                            
+                            // Generate safe ID
+                            const id = `heading-${index}-${text.toLowerCase()
+                                .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+                                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                                .replace(/^-+|-+$/g, '')}`; // Remove leading/trailing hyphens
+                            
+                            headings.push({ level, text, id });
+                        }
+                    } catch (e) {
+                        console.warn('Error processing heading:', line, e);
                     }
                 });
                 
@@ -1066,8 +1090,10 @@
             function addIdsToHeadings(html, headings) {
                 let modifiedHtml = html;
                 headings.forEach(heading => {
-                    const headingRegex = new RegExp(`<h${heading.level}([^>]*)>(.*?${escapeRegex(heading.text)}.*?)<\/h${heading.level}>`, 'i');
-                    modifiedHtml = modifiedHtml.replace(headingRegex, `<h${heading.level}$1 id="${heading.id}">$2</h${heading.level}>`);
+                    const escapedText = escapeRegex(heading.text);
+                    const headingRegex = new RegExp(`<h${heading.level}([^>]*)>(.*?${escapedText}.*?)<\/h${heading.level}>`, 'i');
+                    const replacement = `<h${heading.level}$1 id="${heading.id}">$2</h${heading.level}>`;
+                    modifiedHtml = modifiedHtml.replace(headingRegex, replacement);
                 });
                 return modifiedHtml;
             }
@@ -1086,7 +1112,7 @@
                 if (!container) return;
                 
                 if (headings.length === 0) {
-                    container.innerHTML = '<p class="text-slate-500 dark:text-slate-400 text-sm italic">No se encontraron secciones en este boletín.</p>';
+                    container.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm italic">No se encontraron secciones en este boletín.</p>`;
                     return;
                 }
                 
@@ -1179,10 +1205,15 @@
             }
             
             function getYouTubeID(url) {
-                if(!url) return null;
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(regExp);
-                return (match && match[2].length === 11) ? match[2] : null;
+                if (!url) return null;
+                try {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                } catch (e) {
+                    console.warn('Error parsing YouTube URL:', e);
+                    return null;
+                }
             }
 
             function generateMediaEmbed(link, fullSize = false) {
@@ -1218,44 +1249,48 @@
 
             // --- Event Listeners ---
             document.body.addEventListener('click', function(event) {
-                if (event.target.classList.contains('tag')) {
-                    event.stopPropagation();
-                    toggleKeywordFilter(event.target.textContent);
-                }
-                if (event.target.classList.contains('read-more-btn')) {
-                    openModal(event.target.dataset.id);
-                }
-                if (event.target.classList.contains('expand-keywords')) {
-                    event.stopPropagation();
-                    expandCardKeywords(event.target.dataset.cardId);
-                }
-                if (event.target.classList.contains('collapse-keywords')) {
-                    event.stopPropagation();
-                    collapseCardKeywords(event.target.dataset.cardId);
-                }
-                // TOC navigation
-                if (event.target.classList.contains('toc-item')) {
-                    event.preventDefault();
-                    const headingId = event.target.getAttribute('data-heading-id');
-                    const targetElement = document.getElementById(headingId);
-                    if (targetElement) {
-                        // Find the scrollable modal content container
-                        const modalContent = document.querySelector('#modal .overflow-y-auto');
-                        if (modalContent) {
-                            // Calculate position relative to modal content
-                            const modalRect = modalContent.getBoundingClientRect();
-                            const targetRect = targetElement.getBoundingClientRect();
-                            const scrollTop = modalContent.scrollTop + (targetRect.top - modalRect.top) - 80; // 80px offset for header
-                            
-                            modalContent.scrollTo({
-                                top: scrollTop,
-                                behavior: 'smooth'
-                            });
-                        } else {
-                            // Fallback
-                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                try {
+                    if (event.target.classList.contains('tag')) {
+                        event.stopPropagation();
+                        toggleKeywordFilter(event.target.textContent);
+                    }
+                    if (event.target.classList.contains('read-more-btn')) {
+                        openModal(event.target.dataset.id);
+                    }
+                    if (event.target.classList.contains('expand-keywords')) {
+                        event.stopPropagation();
+                        expandCardKeywords(event.target.dataset.cardId);
+                    }
+                    if (event.target.classList.contains('collapse-keywords')) {
+                        event.stopPropagation();
+                        collapseCardKeywords(event.target.dataset.cardId);
+                    }
+                    // TOC navigation
+                    if (event.target.classList.contains('toc-item')) {
+                        event.preventDefault();
+                        const headingId = event.target.getAttribute('data-heading-id');
+                        const targetElement = document.getElementById(headingId);
+                        if (targetElement) {
+                            // Find the scrollable modal content container
+                            const modalContent = document.querySelector('#modal .overflow-y-auto');
+                            if (modalContent) {
+                                // Calculate position relative to modal content
+                                const modalRect = modalContent.getBoundingClientRect();
+                                const targetRect = targetElement.getBoundingClientRect();
+                                const scrollTop = modalContent.scrollTop + (targetRect.top - modalRect.top) - 80; // 80px offset for header
+                                
+                                modalContent.scrollTo({
+                                    top: scrollTop,
+                                    behavior: 'smooth'
+                                });
+                            } else {
+                                // Fallback
+                                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
                         }
                     }
+                } catch (error) {
+                    console.warn('Event handler error:', error);
                 }
             });
             
@@ -1270,92 +1305,120 @@
             const navFaq = document.getElementById('nav-faq');
             const toggleReadingModeBtn = document.getElementById('toggle-reading-mode');
             
-            if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
-            if (searchInput) searchInput.addEventListener('input', applyFilters);
-            if (monthFilter) monthFilter.addEventListener('change', applyFilters);
-            if (weekFilter) weekFilter.addEventListener('change', applyFilters);
-            if (modalClose) modalClose.addEventListener('click', closeModal);
-            if (modal) {
-                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            if (yearSelector) {
+                yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
             }
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+            if (monthFilter) {
+                monthFilter.addEventListener('change', applyFilters);
+            }
+            if (weekFilter) {
+                weekFilter.addEventListener('change', applyFilters);
+            }
+            if (modalClose) {
+                modalClose.addEventListener('click', closeModal);
+            }
+            if (modal) {
+                modal.addEventListener('click', (e) => { 
+                    if (e.target === modal) closeModal(); 
+                });
+            }
+            
             document.addEventListener('keydown', (e) => { 
-                if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
+                if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) {
+                    closeModal(); 
+                }
             });
             
             // New modal navigation
-            if (navContent) navContent.addEventListener('click', () => {
-                // Visual feedback
-                navContent.style.backgroundColor = 'rgb(245 158 11)';
-                navContent.style.color = 'white';
-                setTimeout(() => {
-                    navContent.style.backgroundColor = '';
-                    navContent.style.color = '';
-                }, 200);
-                
-                // Reset reading mode first to ensure content is visible
-                const modal = document.getElementById('modal');
-                if (modal) modal.classList.remove('reading-mode');
-                
-                // Show table of contents
-                showTableOfContents();
-                
-                // Scroll to sidebar in desktop or mobile TOC section
-                const isDesktop = window.innerWidth >= 1024;
-                if (isDesktop) {
-                    const sidebar = document.getElementById('modal-sidebar');
-                    if (sidebar) {
-                        sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // New modal navigation
+            if (navContent) {
+                navContent.addEventListener('click', () => {
+                    // Visual feedback
+                    navContent.style.backgroundColor = 'rgb(245 158 11)';
+                    navContent.style.color = 'white';
+                    setTimeout(() => {
+                        navContent.style.backgroundColor = '';
+                        navContent.style.color = '';
+                    }, 200);
+                    
+                    // Reset reading mode first to ensure content is visible
+                    const modal = document.getElementById('modal');
+                    if (modal) modal.classList.remove('reading-mode');
+                    
+                    // Show table of contents
+                    showTableOfContents();
+                    
+                    // Scroll to sidebar in desktop or mobile TOC section
+                    const isDesktop = window.innerWidth >= 1024;
+                    if (isDesktop) {
+                        const sidebar = document.getElementById('modal-sidebar');
+                        if (sidebar) {
+                            sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else {
+                        const mobileToc = document.getElementById('mobile-toc');
+                        if (mobileToc) {
+                            mobileToc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     }
-                } else {
-                    const mobileToc = document.getElementById('mobile-toc');
-                    if (mobileToc) {
-                        mobileToc.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
+                });
+            }
             
-            if (navFaq) navFaq.addEventListener('click', () => {
-                // Visual feedback
-                navFaq.style.backgroundColor = 'rgb(245 158 11)';
-                navFaq.style.color = 'white';
-                setTimeout(() => {
-                    navFaq.style.backgroundColor = '';
-                    navFaq.style.color = '';
-                }, 200);
-                
-                // Reset reading mode first to ensure FAQ is visible
-                const modal = document.getElementById('modal');
-                if (modal) modal.classList.remove('reading-mode');
-                
-                // Show FAQ
-                showFAQ();
-                
-                // In desktop, scroll to sidebar; in mobile, scroll to mobile FAQ section
-                const isDesktop = window.innerWidth >= 1024;
-                let targetElement;
-                
-                if (isDesktop) {
-                    targetElement = document.getElementById('modal-sidebar');
-                } else {
-                    targetElement = document.getElementById('mobile-faq');
-                }
-                
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-            if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
-                const modal = document.getElementById('modal');
-                if (modal) {
-                    modal.classList.toggle('reading-mode');
-                    // Update tooltip text based on mode
-                    const isReading = modal.classList.contains('reading-mode');
-                    toggleReadingModeBtn.setAttribute('title', isReading ? 'Salir del modo lectura' : 'Modo lectura');
-                }
-            });
+            if (navFaq) {
+                navFaq.addEventListener('click', () => {
+                    // Visual feedback
+                    navFaq.style.backgroundColor = 'rgb(245 158 11)';
+                    navFaq.style.color = 'white';
+                    setTimeout(() => {
+                        navFaq.style.backgroundColor = '';
+                        navFaq.style.color = '';
+                    }, 200);
+                    
+                    // Reset reading mode first to ensure FAQ is visible
+                    const modal = document.getElementById('modal');
+                    if (modal) modal.classList.remove('reading-mode');
+                    
+                    // Show FAQ
+                    showFAQ();
+                    
+                    // In desktop, scroll to sidebar; in mobile, scroll to mobile FAQ section
+                    const isDesktop = window.innerWidth >= 1024;
+                    let targetElement;
+                    
+                    if (isDesktop) {
+                        targetElement = document.getElementById('modal-sidebar');
+                    } else {
+                        targetElement = document.getElementById('mobile-faq');
+                    }
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }
+            
+            if (toggleReadingModeBtn) {
+                toggleReadingModeBtn.addEventListener('click', () => {
+                    const modal = document.getElementById('modal');
+                    if (modal) {
+                        modal.classList.toggle('reading-mode');
+                        // Update tooltip text based on mode
+                        const isReading = modal.classList.contains('reading-mode');
+                        toggleReadingModeBtn.setAttribute('title', isReading ? 'Salir del modo lectura' : 'Modo lectura');
+                    }
+                });
+            }
             
             // --- Start the application ---
-            init();
+            try {
+                init();
+            } catch (error) {
+                console.error('Failed to initialize application:', error);
+                showError('Error al inicializar la aplicación.');
+            }
         });
     </script>
 </body>
