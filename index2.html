@@ -706,9 +706,7 @@
                 const url = new URL(window.location);
                 url.searchParams.set('boletin', cardId);
                 window.history.replaceState({}, '', url);
-                
-                // Copy to clipboard with specific message
-                copyToClipboard(url.toString(), '📖 Enlace del boletín copiado automáticamente');
+                // No longer auto-copy to clipboard
             }
 
             function getCardIdFromURL() {
