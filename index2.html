@@ -206,8 +206,6 @@
             </div>
         </div>
 
-        <!-- Keyword Cloud - Removed to reduce prominence -->
-
         <!-- Loading Spinner -->
         <div id="loader" class="flex justify-center items-center py-20">
             <div class="loader ease-linear rounded-full border-8 border-t-8 border-slate-200 dark:border-slate-600 h-32 w-32" style="border-top-color: #f59e0b;"></div>
@@ -341,9 +339,6 @@
                 }
             });
             themeToggle.addEventListener('click', cycleTheme);
-
-
-            // --- DOM Elements - Removed global declarations, using getElementById directly ---
 
             // --- State ---
             let allNewsletters = [];
@@ -643,13 +638,39 @@
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
-                modalTitle.textContent = item.title;
-                modalBody.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
-                modalFaq.innerHTML = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
-                modalVideoContainer.innerHTML = generateMediaEmbed(item.link, true); // Use full embed in modal
+                
+                const modal = document.getElementById('modal');
+                if (!modal) return;
+                
+                // Set title and date using getElementById to avoid variable reference errors
+                const titleElement = document.getElementById('modal-title');
+                const dateElement = document.getElementById('modal-date');
+                const bodyElement = document.getElementById('modal-body-content');
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const faqMobileElement = document.getElementById('modal-faq-mobile');
+                const videoElement = document.getElementById('modal-video-container');
+                
+                if (titleElement) titleElement.textContent = item.title;
+                if (dateElement) dateElement.textContent = item.dateInfo.displayDate;
+                
+                // Set content
+                if (bodyElement) bodyElement.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
+                
+                // Set FAQ (both desktop sidebar and mobile)
+                const faqContent = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
+                if (faqDesktopElement) faqDesktopElement.innerHTML = faqContent;
+                if (faqMobileElement) faqMobileElement.innerHTML = faqContent;
+                
+                // Set media
+                if (videoElement) videoElement.innerHTML = generateMediaEmbed(item.link, true);
+                
+                // Show modal
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
+                
+                // Reset reading mode
+                modal.classList.remove('reading-mode');
             }
 
             function closeModal() {
@@ -779,7 +800,7 @@
             const modalClose = document.getElementById('modal-close');
             const navContent = document.getElementById('nav-content');
             const navFaq = document.getElementById('nav-faq');
-            const toggleReadingMode = document.getElementById('toggle-reading-mode');
+            const toggleReadingModeBtn = document.getElementById('toggle-reading-mode');
             
             if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
             if (searchInput) searchInput.addEventListener('input', applyFilters);
@@ -809,7 +830,7 @@
                     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
-            if (toggleReadingMode) toggleReadingMode.addEventListener('click', () => {
+            if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
                 const modal = document.getElementById('modal');
                 if (modal) modal.classList.toggle('reading-mode');
             });
