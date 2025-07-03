@@ -7,6 +7,12 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config -->
+    <script>
+        tailwind.config = {
+          darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
+        }
+    </script>
     
     <!-- Marked.js for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -17,7 +23,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Basic styles and transitions */
+        /* Tailwind CSS CDN warning fix - for production use proper installation */
+        /* This is development/demo version only */
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -46,21 +53,313 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Modal transitions */
+        #modal {
+            transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        #modal.flex {
+            opacity: 1;
+            backdrop-filter: blur(4px);
+        }
+        #modal > div {
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            transform: scale(0.95) translateY(20px);
+            opacity: 0;
+        }
+        #modal.flex > div {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Reading mode transitions */
+        #modal-sidebar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                       opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                       transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .reading-mode #modal-sidebar {
+            width: 0 !important;
+            opacity: 0;
+            transform: translateX(100%);
+            overflow: hidden;
+        }
+        
+        article {
+            transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                       padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                       margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reading-mode article {
+            max-width: 65ch; /* Optimal reading width */
+        }
+
+        /* Smooth content fade */
+        .content-fade-in {
+            animation: fadeInContent 0.4s ease-out forwards;
+        }
+        @keyframes fadeInContent {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced modal transitions */
+        #modal {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                       backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        #modal.flex {
+            opacity: 1;
+            backdrop-filter: blur(8px);
+        }
+        #modal > div {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                       opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.96) translateY(40px);
+            opacity: 0;
+        }
+        #modal.flex > div {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Content transitions */
+        #modal-body-content, #modal-faq-content, #modal-faq-mobile {
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Table of Contents styles */
+        #modal-faq-content nav a, #mobile-section-content nav a {
+            display: block;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        #modal-faq-content nav a:hover, #mobile-section-content nav a:hover {
+            background-color: rgb(241 245 249); /* slate-100 */
+            color: rgb(217 119 6); /* amber-600 */
+            transform: translateX(4px);
+        }
+        .dark #modal-faq-content nav a:hover, .dark #mobile-section-content nav a:hover {
+            background-color: rgb(51 65 85); /* slate-700 */
+            color: rgb(251 191 36); /* amber-400 */
+        }
+
+        /* Header transitions */
+        #modal .sticky {
+            transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;
+        }
+
+        /* Button transitions */
+        .read-more-btn, .expand-keywords, .collapse-keywords {
+            transition: all 0.2s ease-in-out;
+        }
+        .read-more-btn:hover {
+            transform: translateY(-1px);
+        }
+        .expand-keywords:hover, .collapse-keywords:hover {
+            transform: scale(1.05);
+        }
+
+        /* Navigation buttons transitions */
+        #nav-content, #nav-faq, #toggle-reading-mode {
+            transition: color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        #nav-content:hover, #nav-faq:hover, #toggle-reading-mode:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Card animations */
+        .card {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                       box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                       opacity 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.1), 
+                        0 10px 10px -5px rgba(245, 158, 11, 0.04);
+        }
+
+        /* Grid animations */
+        #newsletter-grid {
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        #newsletter-grid.loaded {
+            opacity: 1;
+        }
+        #newsletter-grid .card {
+            animation: slideInUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Media container transitions */
+        #modal-video-container {
+            transition: padding 0.3s ease-in-out, margin 0.3s ease-in-out;
+        }
+
         /* Light Theme Prose */
-        .prose-custom { color: #374151; }
-        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { color: #111827; }
-        .prose-custom a { color: #c2410c; }
-        .prose-custom strong { color: #a16207; }
-        .prose-custom blockquote { border-left-color: #f59e0b; color: #4b5563; }
-        .prose-custom code { color: #be123c; background-color: #f3f4f6; padding: 0.2em 0.4em; border-radius: 0.25rem; }
-        .prose-custom pre { background-color: #f3f4f6; color: #374151; }
+        .prose-custom { 
+            color: #374151; 
+            line-height: 1.8;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+        .prose-custom.prose-lg {
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        .prose-custom.prose-sm {
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { 
+            color: #111827; 
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.3;
+            transition: color 0.2s ease-in-out;
+        }
+        .prose-custom h1 { 
+            font-size: 2.5rem; 
+            border-bottom: 3px solid #f59e0b; 
+            padding-bottom: 0.75rem; 
+            margin-top: 0;
+            transition: border-color 0.2s ease-in-out, font-size 0.3s ease-in-out;
+        }
+        .prose-custom h2 { 
+            font-size: 1.875rem; 
+            border-bottom: 2px solid #fbbf24; 
+            padding-bottom: 0.5rem;
+            transition: border-color 0.2s ease-in-out, font-size 0.3s ease-in-out;
+        }
+        .prose-custom h3 { 
+            font-size: 1.5rem; 
+            color: #d97706;
+            transition: color 0.2s ease-in-out, font-size 0.3s ease-in-out;
+        }
+        .prose-custom h4 { 
+            font-size: 1.25rem; 
+            color: #92400e;
+            transition: color 0.2s ease-in-out, font-size 0.3s ease-in-out;
+        }
+        .prose-custom p { 
+            margin-bottom: 1.5rem;
+            transition: margin 0.2s ease-in-out;
+        }
+        .prose-custom ul, .prose-custom ol { 
+            margin-bottom: 1.5rem; 
+            padding-left: 1.75rem;
+            transition: margin 0.2s ease-in-out, padding 0.2s ease-in-out;
+        }
+        .prose-custom li { 
+            margin-bottom: 0.75rem;
+            transition: margin 0.2s ease-in-out;
+        }
+        .prose-custom a { 
+            color: #c2410c; 
+            text-decoration: underline;
+            transition: color 0.2s ease-in-out;
+        }
+        .prose-custom a:hover { color: #ea580c; }
+        .prose-custom strong { 
+            color: #a16207; 
+            font-weight: 600;
+            transition: color 0.2s ease-in-out;
+        }
+        .prose-custom blockquote { 
+            border-left: 4px solid #f59e0b; 
+            color: #4b5563; 
+            margin: 2rem 0;
+            padding-left: 1.5rem;
+            font-style: italic;
+            background-color: #fffbeb;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.1em;
+            transition: all 0.3s ease-in-out;
+        }
+        .prose-custom code { 
+            color: #be123c; 
+            background-color: #f3f4f6; 
+            padding: 0.25em 0.5em; 
+            border-radius: 0.375rem;
+            font-size: 0.875em;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.2s ease-in-out;
+        }
+        .prose-custom pre { 
+            background-color: #f3f4f6; 
+            color: #374151;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+            transition: all 0.3s ease-in-out;
+        }
+        .prose-custom pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        /* Reading mode */
+        .reading-mode #modal-sidebar {
+            display: none !important;
+        }
+        .reading-mode article {
+            max-width: 65ch; /* Optimal reading width */
+        }
+
+        /* Media container in new layout */
+        #modal-video-container:not(:empty) {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 2rem;
+            margin-bottom: 0;
+        }
+        .dark #modal-video-container:not(:empty) {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
 
         /* Dark Theme Prose */
         .dark .prose-custom { color: #d1d5db; }
         .dark .prose-custom h1, .dark .prose-custom h2, .dark .prose-custom h3, .dark .prose-custom h4, .dark .prose-custom h5, .dark .prose-custom h6 { color: #f9fafb; }
+        .dark .prose-custom h1 { border-bottom-color: #f59e0b; }
+        .dark .prose-custom h2 { border-bottom-color: #fbbf24; }
+        .dark .prose-custom h3 { color: #fbbf24; }
+        .dark .prose-custom h4 { color: #fde047; }
         .dark .prose-custom a { color: #fb923c; }
+        .dark .prose-custom a:hover { color: #fdba74; }
         .dark .prose-custom strong { color: #fde047; }
-        .dark .prose-custom blockquote { border-left-color: #f59e0b; color: #9ca3af; }
+        .dark .prose-custom blockquote { 
+            border-left-color: #f59e0b; 
+            color: #9ca3af;
+            background-color: #1f2937;
+        }
         .dark .prose-custom code { color: #fda4af; background-color: #374151; }
         .dark .prose-custom pre { background-color: #1f2937; color: #d1d5db; }
         
@@ -118,12 +417,6 @@
             </div>
         </div>
 
-        <!-- Keyword Cloud -->
-        <div id="keyword-cloud-container" class="mb-8 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-md hidden">
-             <h3 class="text-lg font-semibold text-amber-600 dark:text-amber-500 mb-3">Nube de Palabras Clave</h3>
-             <div id="keyword-cloud" class="flex flex-wrap gap-2"></div>
-        </div>
-
         <!-- Loading Spinner -->
         <div id="loader" class="flex justify-center items-center py-20">
             <div class="loader ease-linear rounded-full border-8 border-t-8 border-slate-200 dark:border-slate-600 h-32 w-32" style="border-top-color: #f59e0b;"></div>
@@ -136,24 +429,68 @@
         </div>
 
         <!-- Newsletter Grid -->
-        <div id="newsletter-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="newsletter-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 loaded"></div>
     </main>
 
     <!-- Modal for full newsletter -->
-    <div id="modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 id="modal-title" class="text-2xl font-bold text-amber-600 dark:text-amber-500"></h2>
-                <button id="modal-close" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-3xl">&times;</button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <div id="modal-video-container" class="mb-6"></div>
-                <div class="prose prose-custom max-w-none">
-                    <h3 class="text-xl font-semibold border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">Cuerpo del Boletín</h3>
-                    <div id="modal-body"></div>
-                    <h3 class="text-xl font-semibold border-b border-slate-200 dark:border-slate-700 pb-2 mt-8 mb-4">Preguntas Frecuentes (FAQ)</h3>
-                    <div id="modal-faq"></div>
+    <div id="modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-0">
+        <div class="bg-white dark:bg-slate-900 w-full h-full flex flex-col">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 md:p-6 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm sticky top-0 z-10">
+                <div class="flex-1 min-w-0">
+                    <h2 id="modal-title" class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate pr-4"></h2>
+                    <p id="modal-date" class="text-sm text-amber-600 dark:text-amber-400 font-medium mt-1"></p>
                 </div>
+                <div class="flex items-center gap-3">
+                    <!-- Quick navigation -->
+                    <nav class="hidden md:flex items-center gap-3 text-sm">
+                        <button id="nav-content" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">Contenido</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button id="nav-faq" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">FAQ</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button id="toggle-reading-mode" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                        </button>
+                    </nav>
+                    <button id="modal-close" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-2xl p-1">&times;</button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 overflow-hidden">
+                <div class="h-full flex">
+                    <!-- Main content area -->
+                    <div class="flex-1 overflow-y-auto">
+                        <div class="max-w-4xl mx-auto">
+                            <!-- Media section -->
+                            <div id="modal-video-container" class="w-full"></div>
+                            
+                            <!-- Article-style content -->
+                            <article class="max-w-3xl mx-auto px-6 md:px-8 py-8">
+                                <div id="modal-body-content" class="prose prose-custom prose-lg max-w-none"></div>
+                            </article>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <aside id="modal-sidebar" class="hidden lg:block w-80 bg-slate-50 dark:bg-slate-800/50 border-l border-slate-200 dark:border-slate-700 overflow-y-auto">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
+                            <div id="modal-faq-content" class="prose prose-custom prose-sm max-w-none"></div>
+                        </div>
+                    </aside>
+                </div>
+                
+                <!-- Mobile FAQ/TOC section -->
+                <section id="mobile-content-section" class="lg:hidden border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <div class="max-w-3xl mx-auto px-6 md:px-8 py-8">
+                        <h3 id="mobile-section-title" class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Preguntas Frecuentes</h3>
+                        <div id="mobile-section-content" class="prose prose-custom max-w-none"></div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -214,27 +551,10 @@
             });
             themeToggle.addEventListener('click', cycleTheme);
 
-
-            // --- DOM Elements ---
-            const yearSelector = document.getElementById('year-selector');
-            const searchInput = document.getElementById('search-input');
-            const monthFilter = document.getElementById('month-filter');
-            const weekFilter = document.getElementById('week-filter');
-            const newsletterGrid = document.getElementById('newsletter-grid');
-            const loader = document.getElementById('loader');
-            const noResults = document.getElementById('no-results');
-            const modal = document.getElementById('modal');
-            const modalClose = document.getElementById('modal-close');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const modalFaq = document.getElementById('modal-faq');
-            const modalVideoContainer = document.getElementById('modal-video-container');
-            const keywordCloudContainer = document.getElementById('keyword-cloud-container');
-            const keywordCloud = document.getElementById('keyword-cloud');
-
             // --- State ---
             let allNewsletters = [];
             let activeKeywords = [];
+            let expandedCards = new Set();
             let yearUrls = {};
             
             // --- Config URLs ---
@@ -256,7 +576,8 @@
                     
                     populateYearSelector();
                     
-                    const selectedYear = yearSelector.value;
+                    const yearSelector = document.getElementById('year-selector');
+                    const selectedYear = yearSelector ? yearSelector.value : null;
                     if (selectedYear) {
                         await loadAndProcessData(selectedYear);
                     }
@@ -267,6 +588,9 @@
             }
 
             function populateYearSelector() {
+                const yearSelector = document.getElementById('year-selector');
+                if (!yearSelector) return;
+                
                 const years = Object.keys(yearUrls).sort((a, b) => b - a);
                 if (years.length === 0) {
                     showError("No se encontraron años en la configuración.");
@@ -282,10 +606,16 @@
             }
 
             async function loadAndProcessData(year) {
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                const noResults = document.getElementById('no-results');
+                
                 showLoader(true);
-                newsletterGrid.innerHTML = '';
-                noResults.classList.add('hidden');
-                keywordCloudContainer.classList.add('hidden');
+                if (newsletterGrid) {
+                    newsletterGrid.innerHTML = '';
+                    newsletterGrid.classList.remove('loaded');
+                }
+                if (noResults) noResults.classList.add('hidden');
+                expandedCards.clear(); // Reset expanded cards when loading new data
                 
                 const csvUrl = yearUrls[year];
                 if (!csvUrl) {
@@ -303,7 +633,6 @@
                     allNewsletters = parseCSV(csvText);
                     
                     populateFilterOptions(allNewsletters);
-                    populateKeywordCloud(allNewsletters);
                     applyFilters();
 
                 } catch (error) {
@@ -378,44 +707,84 @@
             }
 
             function renderCards(newsletters) {
-                newsletterGrid.innerHTML = '';
-                if (newsletters.length === 0) {
-                    noResults.classList.remove('hidden');
-                    return;
-                }
-                noResults.classList.add('hidden');
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                const noResults = document.getElementById('no-results');
+                
+                if (!newsletterGrid || !noResults) return;
+                
+                // Fade out grid for smooth transition
+                newsletterGrid.classList.remove('loaded');
+                
+                setTimeout(() => {
+                    newsletterGrid.innerHTML = '';
+                    if (newsletters.length === 0) {
+                        noResults.classList.remove('hidden');
+                        return;
+                    }
+                    noResults.classList.add('hidden');
 
-                newsletters.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
-                    
-                    const mediaEmbedHTML = generateMediaEmbed(item.link);
+                    newsletters.forEach((item, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
+                        card.style.animationDelay = `${index * 0.05}s`; // Stagger animation
+                        
+                        const mediaEmbedHTML = generateMediaEmbed(item.link);
+                        const isExpanded = expandedCards.has(item.id);
+                        const keywordsToShow = isExpanded ? item.keywords : item.keywords.slice(0, 3);
+                        
+                        const keywordTags = keywordsToShow.map(kw => {
+                            const isActive = activeKeywords.includes(kw);
+                            const activeClass = isActive ? 'bg-amber-500 text-slate-800 dark:text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300';
+                            return `<span class="tag text-xs px-2 py-0.5 rounded ${activeClass}">${kw}</span>`;
+                        }).join('');
+                        
+                        const remainingCount = item.keywords.length - 3;
+                        const expandButton = !isExpanded && remainingCount > 0 
+                            ? `<span class="expand-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">+${remainingCount} más</span>` 
+                            : '';
+                        
+                        const collapseButton = isExpanded && item.keywords.length > 3
+                            ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
+                            : '';
 
-                    card.innerHTML = `
-                        <div class="p-5 flex-grow flex flex-col">
-                            <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
-                            <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
-                            <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
-                            <div class="flex flex-wrap gap-2">
-                                ${item.keywords.map(kw => `<span class="tag text-xs font-semibold px-2 py-1 rounded-full bg-slate-200 dark:bg-slate-600 text-amber-700 dark:text-amber-500 hover:bg-amber-500 hover:text-white dark:hover:text-slate-800">${kw}</span>`).join('')}
+                        card.innerHTML = `
+                            <div class="p-5 flex-grow flex flex-col">
+                                <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
+                                <div class="flex flex-wrap gap-1 mt-2">
+                                    ${keywordTags}
+                                    ${expandButton}
+                                    ${collapseButton}
+                                </div>
                             </div>
-                        </div>
-                        ${mediaEmbedHTML ? `
-                        <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
-                            ${mediaEmbedHTML}
-                        </div>
-                        ` : ''}
-                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
-                            <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
-                                Ver cuerpo completo y FAQ &rarr;
-                            </button>
-                        </div>
-                    `;
-                    newsletterGrid.appendChild(card);
-                });
+                            ${mediaEmbedHTML ? `
+                            <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
+                                ${mediaEmbedHTML}
+                            </div>
+                            ` : ''}
+                            <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
+                                <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
+                                    Ver cuerpo completo y FAQ &rarr;
+                                </button>
+                            </div>
+                        `;
+                        newsletterGrid.appendChild(card);
+                    });
+                    
+                    // Fade in grid after cards are added
+                    requestAnimationFrame(() => {
+                        newsletterGrid.classList.add('loaded');
+                    });
+                }, 150); // Small delay for smooth transition
             }
             
             function populateFilterOptions(newsletters) {
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (!monthFilter || !weekFilter) return;
+                
                 const months = new Set();
                 const weeks = new Set();
                 newsletters.forEach(item => {
@@ -429,26 +798,13 @@
                 weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">Semana ${w}</option>`).join('');
             }
             
-            function populateKeywordCloud(newsletters) {
-                const uniqueKeywords = new Map();
-                newsletters.flatMap(item => item.keywords).forEach(kw => {
-                    const normalized = normalizeText(kw);
-                    if (normalized && !uniqueKeywords.has(normalized)) {
-                        uniqueKeywords.set(normalized, kw);
-                    }
-                });
-
-                const sortedKeywords = [...uniqueKeywords.values()].sort((a, b) => a.localeCompare(b));
-                
-                if(sortedKeywords.length === 0) {
-                    keywordCloudContainer.classList.add('hidden');
-                    return;
-                }
-                keywordCloud.innerHTML = sortedKeywords.map(kw => `<span class="tag text-sm font-semibold px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-600 text-amber-700 dark:text-amber-500 hover:bg-amber-500 hover:text-white dark:hover:text-slate-800">${kw}</span>`).join('');
-                keywordCloudContainer.classList.remove('hidden');
-            }
-
             function applyFilters() {
+                const searchInput = document.getElementById('search-input');
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (!searchInput || !monthFilter || !weekFilter) return;
+                
                 const normalizedSearchTerm = normalizeText(searchInput.value);
                 const selectedMonth = monthFilter.value;
                 const selectedWeek = weekFilter.value;
@@ -478,7 +834,11 @@
             }
             
             function toggleKeywordFilter(keyword) {
-                searchInput.value = '';
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
                 const keywordIndex = activeKeywords.indexOf(keyword);
 
                 if (keywordIndex > -1) {
@@ -487,38 +847,311 @@
                     activeKeywords.push(keyword);
                 }
                 
-                document.querySelectorAll('.tag').forEach(tagEl => {
-                    if (activeKeywords.includes(tagEl.textContent)) {
-                        tagEl.classList.add('active');
-                    } else {
-                        tagEl.classList.remove('active');
+                applyFilters();
+            }
+            
+            function expandCardKeywords(cardId) {
+                expandedCards.add(cardId);
+                applyFilters(); // Re-render to show expanded keywords
+            }
+            
+            function collapseCardKeywords(cardId) {
+                expandedCards.delete(cardId);
+                applyFilters(); // Re-render to show collapsed keywords
+            }
+            
+            function processMarkdownContent(content) {
+                if (!content) return '';
+                
+                // First, let's protect existing markdown links by temporarily replacing them
+                const linkPlaceholders = new Map();
+                let placeholderCounter = 0;
+                
+                // Find and replace existing markdown links with placeholders
+                let processed = content.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
+                    if (!url || url.trim() === '' || url === 'undefined') {
+                        return text; // Just return the text if no valid URL
+                    }
+                    const placeholder = `__LINK_PLACEHOLDER_${placeholderCounter++}__`;
+                    linkPlaceholders.set(placeholder, `[${text}](${url})`);
+                    return placeholder;
+                });
+                
+                // Now fix other issues
+                processed = processed
+                    // Fix links that might have undefined in them (these are already handled above)
+                    // Convert plain URLs to markdown links (now safe since existing links are protected)
+                    .replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
+                        return `[${match}](${match})`;
+                    });
+                
+                // Restore the original markdown links
+                linkPlaceholders.forEach((originalLink, placeholder) => {
+                    processed = processed.replace(placeholder, originalLink);
+                });
+                
+                return processed;
+            }
+
+            function processExternalLinks(htmlContent) {
+                // Create a temporary div to parse HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                // Find all links
+                const links = tempDiv.querySelectorAll('a[href]');
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    // Check if it's an external link (starts with http/https and is not an anchor)
+                    if (href && (href.startsWith('http://') || href.startsWith('https://')) && !href.startsWith('#')) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
                     }
                 });
+                
+                return tempDiv.innerHTML;
+            }
 
-                applyFilters();
+            function generateTableOfContents(htmlContent) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                if (headings.length === 0) {
+                    return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>', content: htmlContent };
+                }
+                
+                let tocHtml = '<nav class="space-y-2">';
+                headings.forEach((heading, index) => {
+                    const level = parseInt(heading.tagName.charAt(1));
+                    const text = heading.textContent.trim();
+                    const id = `heading-${index}`;
+                    
+                    // Add ID to the heading
+                    heading.id = id;
+                    
+                    // Calculate indentation based on heading level
+                    const indent = (level - 1) * 0.75; // 0.75rem per level
+                    
+                    tocHtml += `
+                        <a href="#${id}" 
+                           class="block text-sm hover:text-amber-600 dark:hover:text-amber-400 transition-colors py-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                           style="margin-left: ${indent}rem;"
+                           data-heading-id="${id}">
+                            ${text}
+                        </a>
+                    `;
+                });
+                tocHtml += '</nav>';
+                
+                return { toc: tocHtml, content: tempDiv.innerHTML };
             }
 
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
-                modalTitle.textContent = item.title;
-                modalBody.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
-                modalFaq.innerHTML = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
-                modalVideoContainer.innerHTML = generateMediaEmbed(item.link, true); // Use full embed in modal
+                
+                const modal = document.getElementById('modal');
+                if (!modal) return;
+                
+                // Set title and date using getElementById to avoid variable reference errors
+                const titleElement = document.getElementById('modal-title');
+                const dateElement = document.getElementById('modal-date');
+                const bodyElement = document.getElementById('modal-body-content');
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const faqMobileElement = document.getElementById('modal-faq-mobile');
+                const videoElement = document.getElementById('modal-video-container');
+                
+                // First, fade out content for smooth loading
+                [bodyElement, faqDesktopElement, faqMobileElement, videoElement].forEach(el => {
+                    if (el) el.style.opacity = '0';
+                });
+                
+                if (titleElement) titleElement.textContent = item.title;
+                if (dateElement) dateElement.textContent = item.dateInfo.displayDate;
+                
+                // Show modal with transition
                 modal.classList.remove('hidden');
-                modal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
+                
+                // Force reflow to ensure hidden class is removed before adding flex
+                modal.offsetHeight;
+                
+                // Add flex class for transition
+                requestAnimationFrame(() => {
+                    modal.classList.add('flex');
+                });
+                
+                // Reset reading mode
+                modal.classList.remove('reading-mode');
+                
+                // Configure marked.js options
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: false,
+                    mangle: false
+                });
+
+                // Store the current item for TOC generation
+                window.currentNewsletterItem = item;
+
+                // Load content with delay for smooth transition
+                setTimeout(() => {
+                    // Set content
+                    if (bodyElement) {
+                        const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
+                        let htmlContent = marked.parse(processedBody);
+                        htmlContent = processExternalLinks(htmlContent);
+                        
+                        // Generate TOC and get content with IDs
+                        const tocData = generateTableOfContents(htmlContent);
+                        htmlContent = tocData.content; // Use the content with IDs added
+                        
+                        bodyElement.innerHTML = htmlContent;
+                        bodyElement.style.opacity = '1';
+                        bodyElement.classList.add('content-fade-in');
+                        
+                        // Store TOC
+                        window.currentTOC = tocData.toc;
+                    }
+                    
+                    // Set FAQ (both desktop sidebar and mobile)
+                    const processedFaq = processMarkdownContent(item.faq || '*No hay preguntas frecuentes.*');
+                    let faqContent = marked.parse(processedFaq);
+                    faqContent = processExternalLinks(faqContent);
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = faqContent;
+                        faqDesktopElement.style.opacity = '1';
+                        faqDesktopElement.classList.add('content-fade-in');
+                    }
+                    
+                    // Set mobile section (initially FAQ)
+                    const mobileSectionContent = document.getElementById('mobile-section-content');
+                    const mobileSectionTitle = document.getElementById('mobile-section-title');
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = faqContent;
+                        mobileSectionContent.style.opacity = '1';
+                        mobileSectionContent.classList.add('content-fade-in');
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                    
+                    // Set media
+                    if (videoElement) {
+                        videoElement.innerHTML = generateMediaEmbed(item.link, true);
+                        videoElement.style.opacity = '1';
+                        videoElement.classList.add('content-fade-in');
+                    }
+                }, 200); // Slightly longer delay for smoother feel
             }
 
             function closeModal() {
-                modal.classList.add('hidden');
+                const modal = document.getElementById('modal');
+                if (!modal) return;
+                
+                // Start transition by removing flex class
                 modal.classList.remove('flex');
-                document.body.style.overflow = 'auto';
+                
+                // After transition, hide completely and restore scroll
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                    // Clean up global variables
+                    window.currentNewsletterItem = null;
+                    window.currentTOC = null;
+                }, 400); // Match the enhanced CSS transition duration
             }
 
-            function showLoader(show) { loader.style.display = show ? 'flex' : 'none'; }
+            function scrollToHeading(headingId) {
+                const heading = document.getElementById(headingId);
+                if (heading) {
+                    // Calculate offset for fixed header
+                    const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
+                    const elementPosition = heading.offsetTop;
+                    const offsetPosition = elementPosition - headerHeight - 20; // Extra 20px padding
+                    
+                    // Get the scrollable container (the modal content area)
+                    const scrollContainer = heading.closest('.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Fallback to regular scroll
+                        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            }
+
+            function showTableOfContents() {
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const sidebarTitle = document.querySelector('#modal-sidebar h3');
+                const mobileSectionContent = document.getElementById('mobile-section-content');
+                const mobileSectionTitle = document.getElementById('mobile-section-title');
+                
+                if (window.currentTOC) {
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = window.currentTOC;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Índice de Contenido';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = window.currentTOC;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Índice de Contenido';
+                    }
+                }
+            }
+
+            function showFAQ() {
+                const faqDesktopElement = document.getElementById('modal-faq-content');
+                const sidebarTitle = document.querySelector('#modal-sidebar h3');
+                const mobileSectionContent = document.getElementById('mobile-section-content');
+                const mobileSectionTitle = document.getElementById('mobile-section-title');
+                
+                if (window.currentNewsletterItem) {
+                    const processedFaq = processMarkdownContent(window.currentNewsletterItem.faq || '*No hay preguntas frecuentes.*');
+                    let faqContent = marked.parse(processedFaq);
+                    faqContent = processExternalLinks(faqContent);
+                    
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = faqContent;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = faqContent;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                }
+            }
+
+            function showLoader(show) { 
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.display = show ? 'flex' : 'none'; 
+                }
+            }
+            
             function showError(message) {
-                newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                if (newsletterGrid) {
+                    newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
+                }
                 showLoader(false);
             }
             
@@ -572,7 +1205,7 @@
                 const youtubeId = getYouTubeID(link);
                 if (youtubeId) {
                     if (fullSize) {
-                        return `<div class="aspect-w-16 aspect-h-9"><iframe class="w-full h-full rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                        return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
                     } else {
                         return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                     }
@@ -580,18 +1213,24 @@
                 
                 if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
                     const type = link.match(/\.(mp3|wav|ogg|m4a)$/i)[1];
-                    return `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                    const audioElement = fullSize 
+                        ? `<div class="w-full max-w-2xl mx-auto mb-8"><audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio></div>`
+                        : `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                    return audioElement;
                 }
 
                 if (link.includes('ivoox.com')) {
                     const embedLink = link.replace('_sq_f1', '_ep_1');
-                    return `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                    const ivooxElement = fullSize
+                        ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
+                        : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                    return ivooxElement;
                 }
 
                 return ''; // Return empty if no known media type is found
             }
 
-            // --- Event Listeners ---
+            // Event Listeners
             document.body.addEventListener('click', function(event) {
                 if (event.target.classList.contains('tag')) {
                     event.stopPropagation();
@@ -600,14 +1239,85 @@
                 if (event.target.classList.contains('read-more-btn')) {
                     openModal(event.target.dataset.id);
                 }
+                if (event.target.classList.contains('expand-keywords')) {
+                    event.stopPropagation();
+                    expandCardKeywords(event.target.dataset.cardId);
+                }
+                if (event.target.classList.contains('collapse-keywords')) {
+                    event.stopPropagation();
+                    collapseCardKeywords(event.target.dataset.cardId);
+                }
+                // Handle TOC link clicks
+                if (event.target.dataset.headingId) {
+                    event.preventDefault();
+                    const headingId = event.target.dataset.headingId;
+                    scrollToHeading(headingId);
+                }
             });
-            yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
-            searchInput.addEventListener('input', applyFilters);
-            monthFilter.addEventListener('change', applyFilters);
-            weekFilter.addEventListener('change', applyFilters);
-            modalClose.addEventListener('click', closeModal);
-            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-            document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal(); });
+            
+            // Get elements for event listeners
+            const yearSelector = document.getElementById('year-selector');
+            const searchInput = document.getElementById('search-input');
+            const monthFilter = document.getElementById('month-filter');
+            const weekFilter = document.getElementById('week-filter');
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const navContent = document.getElementById('nav-content');
+            const navFaq = document.getElementById('nav-faq');
+            const toggleReadingModeBtn = document.getElementById('toggle-reading-mode');
+            
+            if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
+            if (searchInput) searchInput.addEventListener('input', applyFilters);
+            if (monthFilter) monthFilter.addEventListener('change', applyFilters);
+            if (weekFilter) weekFilter.addEventListener('change', applyFilters);
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+            document.addEventListener('keydown', (e) => { 
+                if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
+            });
+            
+            // New modal navigation
+            if (navContent) navContent.addEventListener('click', () => {
+                // Show table of contents in sidebar
+                showTableOfContents();
+                
+                // Scroll to content on mobile/when sidebar not visible
+                const isDesktop = window.innerWidth >= 1024;
+                if (isDesktop) {
+                    const contentElement = document.getElementById('modal-body-content');
+                    if (contentElement) {
+                        contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } else {
+                    // On mobile, scroll to the mobile content section (now showing TOC)
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+            if (navFaq) navFaq.addEventListener('click', () => {
+                // Show FAQ in sidebar
+                showFAQ();
+                
+                // In mobile, scroll to mobile section
+                const isDesktop = window.innerWidth >= 1024;
+                if (!isDesktop) {
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+            if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
+                const modal = document.getElementById('modal');
+                if (modal) modal.classList.toggle('reading-mode');
+            });
+            
+            // Make scrollToHeading globally available
+            window.scrollToHeading = scrollToHeading;
             
             // --- Start the application ---
             init();
