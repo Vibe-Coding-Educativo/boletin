@@ -23,26 +23,7 @@ A continuación se detalla el contenido que debes generar para cada campo del fo
 #### 4. Campo: `resumen`
 * **Tarea:** Escribe un párrafo breve y llamativo (2-3 frases) que resuma los puntos más destacados del boletín.
 
----
-### Sección: Cita Inspiradora
-
-#### 5. Campo: `cita_texto`
-* **Tarea:** Proporciona una cita relevante a la educación, tecnología o IA.
-* **Restricción:** No repitas citas de boletines anteriores. Consulta el historial para asegurarte de que es única.
-
-#### 6. Campo: `cita_autor`
-* **Tarea:** Indica el nombre completo del autor de la cita.
-
-#### 7. Campo: `cita_autor_bio`
-* **Tarea:** Escribe una breve biografía del autor, incluyendo sus fechas de nacimiento y fallecimiento.
-
-#### 8. Campo: `cita_reflexion`
-* **Tarea:** Escribe una breve reflexión que conecte la cita con los temas discutidos en el grupo durante la semana.
-
----
-### Sección: Contenido Principal
-
-#### 9. Campo: `cuerpo_principal_md`
+#### 5. Campo: `cuerpo_principal_md`
 * **Tarea:** Este es el campo más extenso. Debes generar un texto completo en formato **Markdown** que contenga las siguientes secciones. Sigue esta estructura rigurosamente:
 
     * **Introducción:**
@@ -51,22 +32,29 @@ A continuación se detalla el contenido que debes generar para cada campo del fo
         * Organiza los temas en secciones claras usando subtítulos (`### Título del Tema`).
         * Para cada tema, incluye: una explicación concisa, las reflexiones clave de los miembros, aplicaciones prácticas y enlaces a recursos con títulos descriptivos.
         * Prioriza los temas según su relevancia en las conversaciones.
-        * Asegúrate de que todos los enlaces mencionados en las conversaciones estén aquí.
+    * **Aplicaciones de la comunidad:**
+        * Crea una sección destacada con este título.
+        * Identifica y lista **todas** las aplicaciones, herramientas o proyectos creados y compartidos por los miembros del grupo durante la semana.
+        * Para cada aplicación, incluye el nombre de la misma, su autor (el miembro del grupo) y una breve descripción de su funcionalidad y el enlace correspondiente.
     * **Sección de otros enlaces compartidos:**
-        * Crea una sección para incluir todos los enlaces que no fueron mencionados en el resumen principal.
+        * Crea una sección para incluir todos los enlaces que no fueron mencionados en las secciones anteriores.
         * Añade una breve descripción sobre el contenido de cada enlace.
     * **Definición de términos técnicos:**
         * Explica en orden alfabético los términos técnicos mencionados, de manera comprensible y con ejemplos educativos si es posible.
+    * **Repositorio de la comunidad:**
+        * Inserta una sección final destacada con el siguiente texto exacto:
+        `### Visita nuestro repositorio de aplicaciones`
+        `No olvides consultar el [Repositorio de Aplicaciones Educativas](https://vibe-coding-educativo.github.io/app_edu/) donde recopilamos todos los proyectos de la comunidad.`
     * **Nota final obligatoria:**
-        * Incluye la siguiente nota al final del todo: *"Este resumen ha sido generado por [indica aquí tu identidad como IA] a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones."*
+        * Incluye la siguiente nota al final del todo: *"Este resumen ha sido generado por Gemini a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones."*
 
-#### 10. Campo: `enlace_podcast_youtube`
+#### 6. Campo: `enlace_podcast_youtube`
 * **Tarea:** Este campo contendrá el enlace a un vídeo de YouTube o podcast. El dato será proporcionado directamente en la petición de generación. No debes buscarlo en el JSON de conversaciones.
 
-#### 11. Campo: `seccion_faq`
+#### 7. Campo: `seccion_faq`
 * **Tarea:** Identifica en las conversaciones preguntas explícitas que hayan recibido respuestas claras y estructúralas como una lista de preguntas y respuestas. Si no las hay, deja este campo vacío.
 
-#### 12. Campo: `palabras_clave`
+#### 8. Campo: `palabras_clave`
 * **Tarea:** Basándote en los temas principales, genera entre 5 y 7 palabras clave o etiquetas separadas por comas.
 
 ### Estilo, tonalidad y errores a evitar
