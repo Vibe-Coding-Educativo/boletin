@@ -404,18 +404,90 @@
         
         /* Card highlight effect for direct links */
         .card-highlighted {
-            animation: highlight-pulse 2s ease-in-out;
+            position: relative;
+            animation: highlight-pulse 3s ease-in-out;
+            border: 3px solid #f59e0b !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2) !important;
+            transform: scale(1.02) !important;
+            z-index: 10;
+        }
+        
+        .card-highlighted::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, #f59e0b, #fbbf24, #f59e0b, #fbbf24);
+            border-radius: 12px;
+            z-index: -1;
+            animation: glow-border 3s ease-in-out;
+        }
+        
+        .card-highlighted::after {
+            content: '📍 Boletín seleccionado';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f59e0b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: badge-appear 3s ease-in-out;
         }
         
         @keyframes highlight-pulse {
-            0%, 100% { 
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                transform: scale(1);
-            }
-            50% { 
-                box-shadow: 0 0 0 3px #f59e0b, 0 20px 25px -5px rgba(245, 158, 11, 0.2);
+            0% { 
+                border-color: #f59e0b;
+                box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2);
                 transform: scale(1.02);
             }
+            50% { 
+                border-color: #fbbf24;
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 15px 40px rgba(251, 191, 36, 0.3);
+                transform: scale(1.03);
+            }
+            100% { 
+                border-color: #f59e0b;
+                box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2);
+                transform: scale(1.02);
+            }
+        }
+        
+        @keyframes glow-border {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes badge-appear {
+            0% { 
+                opacity: 0; 
+                transform: translateX(-50%) translateY(-10px) scale(0.8); 
+            }
+            20% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0) scale(1); 
+            }
+            80% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0) scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateX(-50%) translateY(-10px) scale(0.8); 
+            }
+        }
+
+        /* Dark theme adjustments for highlighted card */
+        .dark .card-highlighted::after {
+            background: #fbbf24;
+            color: #111827;
         }
 
         /* Share button in cards */
@@ -726,6 +798,9 @@
                     if (targetCard) {
                         const card = targetCard.closest('.card');
                         if (card) {
+                            // Store reference to highlighted card globally
+                            window.highlightedCard = card;
+                            
                             card.scrollIntoView({ 
                                 behavior: 'smooth', 
                                 block: 'center' 
@@ -733,9 +808,14 @@
                             
                             // Add highlight effect
                             card.classList.add('card-highlighted');
+                            
+                            // Remove highlight after 5 seconds or when modal opens
                             setTimeout(() => {
-                                card.classList.remove('card-highlighted');
-                            }, 2000);
+                                if (card.classList.contains('card-highlighted')) {
+                                    card.classList.remove('card-highlighted');
+                                    window.highlightedCard = null;
+                                }
+                            }, 5000);
                             
                             showToast('📍 Navegado al boletín seleccionado');
                         }
@@ -840,6 +920,9 @@
             async function loadAndProcessData(year) {
                 const newsletterGrid = document.getElementById('newsletter-grid');
                 const noResults = document.getElementById('no-results');
+                
+                // Clean up any highlighted card reference
+                window.highlightedCard = null;
                 
                 // Pause any currently playing audio when changing data
                 pauseCurrentAudio();
@@ -1196,6 +1279,12 @@
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
+                
+                // Remove highlight from any highlighted card when opening modal
+                if (window.highlightedCard) {
+                    window.highlightedCard.classList.remove('card-highlighted');
+                    window.highlightedCard = null;
+                }
                 
                 // Update URL and copy to clipboard
                 updateURLWithCard(id);
