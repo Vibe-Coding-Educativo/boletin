@@ -32,6 +32,13 @@
             cursor: pointer;
             transition: background-color 0.2s, color 0.2s;
         }
+        .tag.active {
+            background-color: #f59e0b; /* amber-500 */
+            color: #1e293b; /* slate-800 */
+        }
+        .dark .tag.active {
+            color: #ffffff;
+        }
         .loader {
             animation: spin 1s linear infinite;
         }
@@ -56,6 +63,14 @@
         .dark .prose-custom blockquote { border-left-color: #f59e0b; color: #9ca3af; }
         .dark .prose-custom code { color: #fda4af; background-color: #374151; }
         .dark .prose-custom pre { background-color: #1f2937; color: #d1d5db; }
+        
+        audio {
+            filter: invert(0.1);
+        }
+        .dark audio {
+            filter: invert(1) sepia(1) saturate(0.5) hue-rotate(180deg);
+        }
+
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -169,13 +184,10 @@
             function updateToggleIcon(theme) {
                 if (theme === 'dark') {
                     themeToggle.innerHTML = moonIcon;
-                    themeToggle.setAttribute('aria-label', 'Activar tema claro');
                 } else if (theme === 'light') {
                     themeToggle.innerHTML = sunIcon;
-                    themeToggle.setAttribute('aria-label', 'Activar tema del sistema');
                 } else {
                     themeToggle.innerHTML = systemIcon;
-                    themeToggle.setAttribute('aria-label', 'Activar tema oscuro');
                 }
             }
 
@@ -222,7 +234,7 @@
 
             // --- State ---
             let allNewsletters = [];
-            let activeKeyword = null;
+            let activeKeywords = [];
             let yearUrls = {};
             
             // --- Config URLs ---
@@ -348,12 +360,13 @@
                     if (values.length < 9) return null;
 
                     const keywordsRaw = values.slice(8)
-                        .flatMap(kwCell => kwCell.split(',')) // Split cells with commas
+                        .flatMap(kwCell => kwCell.split(','))
                         .map(kw => kw.trim())
-                        .filter(kw => kw); // Remove empty strings
+                        .filter(kw => kw);
 
                     return {
                         id: values[1].trim(),
+                        dateInfo: parseIdToDateInfo(values[1].trim()),
                         title: values[3].trim(),
                         summary: values[4].trim(),
                         body: values[5].trim(),
@@ -361,7 +374,7 @@
                         faq: values[7].trim(),
                         keywords: keywordsRaw
                     };
-                }).filter(item => item && item.id).sort((a, b) => b.id.localeCompare(a.id));
+                }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
             }
 
             function renderCards(newsletters) {
@@ -377,28 +390,23 @@
                     card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
                     card.innerHTML = `
                         <div class="p-5 flex-grow flex flex-col">
-                            <p class="text-sm text-amber-600 dark:text-amber-400 mb-1">${formatDate(item.id)}</p>
+                            <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
                             <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
                             <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
-                            <div class="flex flex-wrap gap-2 mb-4">
+                            <div class="flex flex-wrap gap-2">
                                 ${item.keywords.map(kw => `<span class="tag text-xs font-semibold px-2 py-1 rounded-full bg-slate-200 dark:bg-slate-600 text-amber-700 dark:text-amber-500 hover:bg-amber-500 hover:text-white dark:hover:text-slate-800">${kw}</span>`).join('')}
                             </div>
                         </div>
-                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
+                        <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
+                            ${generateMediaEmbed(item.link)}
+                        </div>
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
                             <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
-                                Leer boletín completo &rarr;
+                                Ver cuerpo completo y FAQ &rarr;
                             </button>
                         </div>
                     `;
                     newsletterGrid.appendChild(card);
-                });
-                
-                document.querySelectorAll('.read-more-btn').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.id)));
-                document.querySelectorAll('.tag').forEach(tagEl => {
-                    tagEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        filterByKeyword(tagEl.textContent);
-                    });
                 });
             }
             
@@ -406,8 +414,8 @@
                 const months = new Set();
                 const weeks = new Set();
                 newsletters.forEach(item => {
-                    const date = new Date(item.id);
-                    if (isNaN(date.getTime())) return;
+                    const date = item.dateInfo.startDate;
+                    if (!date || isNaN(date.getTime())) return;
                     months.add(date.getMonth());
                     weeks.add(getWeekNumber(date));
                 });
@@ -421,7 +429,7 @@
                 newsletters.flatMap(item => item.keywords).forEach(kw => {
                     const normalized = normalizeText(kw);
                     if (normalized && !uniqueKeywords.has(normalized)) {
-                        uniqueKeywords.set(normalized, kw); // Store original casing
+                        uniqueKeywords.set(normalized, kw);
                     }
                 });
 
@@ -433,62 +441,52 @@
                 }
                 keywordCloud.innerHTML = sortedKeywords.map(kw => `<span class="tag text-sm font-semibold px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-600 text-amber-700 dark:text-amber-500 hover:bg-amber-500 hover:text-white dark:hover:text-slate-800">${kw}</span>`).join('');
                 keywordCloudContainer.classList.remove('hidden');
-
-                keywordCloud.querySelectorAll('.tag').forEach(tagEl => {
-                    tagEl.addEventListener('click', () => {
-                        const clickedKeyword = tagEl.textContent;
-                        if (activeKeyword === clickedKeyword) {
-                            activeKeyword = null;
-                            tagEl.classList.remove('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
-                        } else {
-                            keywordCloud.querySelector('.tag.active')?.classList.remove('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
-                            activeKeyword = clickedKeyword;
-                            tagEl.classList.add('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
-                        }
-                        applyFilters();
-                    });
-                });
             }
 
             function applyFilters() {
                 const normalizedSearchTerm = normalizeText(searchInput.value);
                 const selectedMonth = monthFilter.value;
                 const selectedWeek = weekFilter.value;
-                const normalizedActiveKeyword = activeKeyword ? normalizeText(activeKeyword) : null;
                 
                 const filtered = allNewsletters.filter(item => {
-                    const date = new Date(item.id);
-                    if (isNaN(date.getTime())) return false;
+                    try {
+                        const date = item.dateInfo.startDate;
+                        if (!date || isNaN(date.getTime())) return false;
 
-                    const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
-                    const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
-                    
-                    const keywordMatch = !normalizedActiveKeyword || item.keywords.some(kw => normalizeText(kw) === normalizedActiveKeyword);
+                        const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
+                        const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
+                        
+                        const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
 
-                    const searchMatch = normalizedSearchTerm === '' ||
-                        normalizeText(item.title).includes(normalizedSearchTerm) ||
-                        normalizeText(item.summary).includes(normalizedSearchTerm) ||
-                        item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
+                        const searchMatch = normalizedSearchTerm === '' ||
+                            normalizeText(item.title).includes(normalizedSearchTerm) ||
+                            normalizeText(item.summary).includes(normalizedSearchTerm) ||
+                            item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
 
-                    return monthMatch && weekMatch && keywordMatch && searchMatch;
+                        return monthMatch && weekMatch && keywordMatch && searchMatch;
+                    } catch (e) {
+                        console.error("Error filtering item:", item, e);
+                        return false;
+                    }
                 });
                 renderCards(filtered);
             }
             
-            function filterByKeyword(keyword) {
-                searchInput.value = ''; // Clear search when clicking a tag
-                if (activeKeyword === keyword) {
-                    activeKeyword = null;
+            function toggleKeywordFilter(keyword) {
+                searchInput.value = '';
+                const keywordIndex = activeKeywords.indexOf(keyword);
+
+                if (keywordIndex > -1) {
+                    activeKeywords.splice(keywordIndex, 1);
                 } else {
-                    activeKeyword = keyword;
+                    activeKeywords.push(keyword);
                 }
                 
-                // Visually update tags
-                keywordCloud.querySelectorAll('.tag').forEach(tagEl => {
-                    if (tagEl.textContent === activeKeyword) {
-                        tagEl.classList.add('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
+                document.querySelectorAll('.tag').forEach(tagEl => {
+                    if (activeKeywords.includes(tagEl.textContent)) {
+                        tagEl.classList.add('active');
                     } else {
-                        tagEl.classList.remove('active', 'bg-amber-500', 'text-white', 'dark:text-slate-800');
+                        tagEl.classList.remove('active');
                     }
                 });
 
@@ -501,13 +499,7 @@
                 modalTitle.textContent = item.title;
                 modalBody.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
                 modalFaq.innerHTML = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
-                modalVideoContainer.innerHTML = '';
-                if(item.link && item.link.includes('youtu')) {
-                    const videoId = getYouTubeID(item.link);
-                    if(videoId) {
-                        modalVideoContainer.innerHTML = `<div class="aspect-w-16 aspect-h-9"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full rounded-lg"></iframe></div>`;
-                    }
-                }
+                modalVideoContainer.innerHTML = generateMediaEmbed(item.link);
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
@@ -525,23 +517,82 @@
                 showLoader(false);
             }
             
-            function formatDate(idString) {
-                const date = new Date(idString);
-                if (isNaN(date.getTime())) return idString;
-                return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+            function parseIdToDateInfo(idString) {
+                if (!idString || typeof idString !== 'string') {
+                    return { startDate: null, endDate: null, displayDate: 'Fecha no disponible' };
+                }
+                const parts = idString.split('_');
+                if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString };
+                
+                const startDate = new Date(parts[1]);
+                const endDate = new Date(parts[2]);
+
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                     return { startDate: null, endDate: null, displayDate: 'Fecha inválida' };
+                }
+
+                const options = { month: 'long', day: 'numeric' };
+                const startDay = startDate.toLocaleDateString('es-ES', { day: 'numeric' });
+                const startMonth = startDate.toLocaleDateString('es-ES', { month: 'long' });
+                const endDay = endDate.toLocaleDateString('es-ES', { day: 'numeric' });
+                const endMonth = endDate.toLocaleDateString('es-ES', { month: 'long' });
+                const year = endDate.getFullYear();
+
+                let displayDate;
+                if (startMonth === endMonth) {
+                    displayDate = `Semana del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
+                } else {
+                    displayDate = `Semana del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
+                }
+                
+                return { startDate, endDate, displayDate };
             }
+
             function getWeekNumber(d) {
                 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
                 const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
                 return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             }
+            
             function getYouTubeID(url) {
-                const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                if(!url) return null;
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
                 return (match && match[2].length === 11) ? match[2] : null;
             }
 
+            function generateMediaEmbed(link) {
+                if (!link) return '';
+                
+                const youtubeId = getYouTubeID(link);
+                if (youtubeId) {
+                    return `<div class="aspect-w-16 aspect-h-9"><iframe class="w-full h-full rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                }
+                
+                if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                    const type = link.match(/\.(mp3|wav|ogg|m4a)$/i)[1];
+                    return `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
+                }
+
+                if (link.includes('ivoox.com')) {
+                    const embedLink = link.replace('_sq_f1', '_ep_1');
+                    return `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+                }
+
+                return `<a href="${link}" target="_blank" class="text-amber-600 dark:text-amber-500 hover:underline">Ver contenido multimedia</a>`;
+            }
+
             // --- Event Listeners ---
+            document.body.addEventListener('click', function(event) {
+                if (event.target.classList.contains('tag')) {
+                    event.stopPropagation();
+                    toggleKeywordFilter(event.target.textContent);
+                }
+                if (event.target.classList.contains('read-more-btn')) {
+                    openModal(event.target.dataset.id);
+                }
+            });
             yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
             searchInput.addEventListener('input', applyFilters);
             monthFilter.addEventListener('change', applyFilters);
