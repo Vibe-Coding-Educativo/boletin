@@ -343,20 +343,7 @@
             themeToggle.addEventListener('click', cycleTheme);
 
 
-            // --- DOM Elements ---
-            const yearSelector = document.getElementById('year-selector');
-            const searchInput = document.getElementById('search-input');
-            const monthFilter = document.getElementById('month-filter');
-            const weekFilter = document.getElementById('week-filter');
-            const newsletterGrid = document.getElementById('newsletter-grid');
-            const loader = document.getElementById('loader');
-            const noResults = document.getElementById('no-results');
-            const modal = document.getElementById('modal');
-            const modalClose = document.getElementById('modal-close');
-            const modalVideoContainer = document.getElementById('modal-video-container');
-            const navContent = document.getElementById('nav-content');
-            const navFaq = document.getElementById('nav-faq');
-            const toggleReadingMode = document.getElementById('toggle-reading-mode');
+            // --- DOM Elements - Removed global declarations, using getElementById directly ---
 
             // --- State ---
             let allNewsletters = [];
@@ -383,7 +370,8 @@
                     
                     populateYearSelector();
                     
-                    const selectedYear = yearSelector.value;
+                    const yearSelector = document.getElementById('year-selector');
+                    const selectedYear = yearSelector ? yearSelector.value : null;
                     if (selectedYear) {
                         await loadAndProcessData(selectedYear);
                     }
@@ -394,6 +382,9 @@
             }
 
             function populateYearSelector() {
+                const yearSelector = document.getElementById('year-selector');
+                if (!yearSelector) return;
+                
                 const years = Object.keys(yearUrls).sort((a, b) => b - a);
                 if (years.length === 0) {
                     showError("No se encontraron años en la configuración.");
@@ -409,9 +400,12 @@
             }
 
             async function loadAndProcessData(year) {
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                const noResults = document.getElementById('no-results');
+                
                 showLoader(true);
-                newsletterGrid.innerHTML = '';
-                noResults.classList.add('hidden');
+                if (newsletterGrid) newsletterGrid.innerHTML = '';
+                if (noResults) noResults.classList.add('hidden');
                 expandedCards.clear(); // Reset expanded cards when loading new data
                 
                 const csvUrl = yearUrls[year];
@@ -504,6 +498,11 @@
             }
 
             function renderCards(newsletters) {
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                const noResults = document.getElementById('no-results');
+                
+                if (!newsletterGrid || !noResults) return;
+                
                 newsletterGrid.innerHTML = '';
                 if (newsletters.length === 0) {
                     noResults.classList.remove('hidden');
@@ -561,6 +560,11 @@
             }
             
             function populateFilterOptions(newsletters) {
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (!monthFilter || !weekFilter) return;
+                
                 const months = new Set();
                 const weeks = new Set();
                 newsletters.forEach(item => {
@@ -575,6 +579,12 @@
             }
             
             function applyFilters() {
+                const searchInput = document.getElementById('search-input');
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (!searchInput || !monthFilter || !weekFilter) return;
+                
                 const normalizedSearchTerm = normalizeText(searchInput.value);
                 const selectedMonth = monthFilter.value;
                 const selectedWeek = weekFilter.value;
@@ -604,7 +614,11 @@
             }
             
             function toggleKeywordFilter(keyword) {
-                searchInput.value = '';
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
                 const keywordIndex = activeKeywords.indexOf(keyword);
 
                 if (keywordIndex > -1) {
@@ -639,14 +653,26 @@
             }
 
             function closeModal() {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+                const modal = document.getElementById('modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
                 document.body.style.overflow = 'auto';
             }
 
-            function showLoader(show) { loader.style.display = show ? 'flex' : 'none'; }
+            function showLoader(show) { 
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.display = show ? 'flex' : 'none'; 
+                }
+            }
+            
             function showError(message) {
-                newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
+                const newsletterGrid = document.getElementById('newsletter-grid');
+                if (newsletterGrid) {
+                    newsletterGrid.innerHTML = `<div class="col-span-full text-center p-8 bg-red-800/20 text-red-500 dark:text-red-400 rounded-lg">${message}</div>`;
+                }
                 showLoader(false);
             }
             
@@ -743,13 +769,29 @@
                     collapseCardKeywords(event.target.dataset.cardId);
                 }
             });
-            yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
-            searchInput.addEventListener('input', applyFilters);
-            monthFilter.addEventListener('change', applyFilters);
-            weekFilter.addEventListener('change', applyFilters);
-            modalClose.addEventListener('click', closeModal);
-            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-            document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal(); });
+            
+            // Get elements for event listeners
+            const yearSelector = document.getElementById('year-selector');
+            const searchInput = document.getElementById('search-input');
+            const monthFilter = document.getElementById('month-filter');
+            const weekFilter = document.getElementById('week-filter');
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const navContent = document.getElementById('nav-content');
+            const navFaq = document.getElementById('nav-faq');
+            const toggleReadingMode = document.getElementById('toggle-reading-mode');
+            
+            if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
+            if (searchInput) searchInput.addEventListener('input', applyFilters);
+            if (monthFilter) monthFilter.addEventListener('change', applyFilters);
+            if (weekFilter) weekFilter.addEventListener('change', applyFilters);
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+            document.addEventListener('keydown', (e) => { 
+                if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
+            });
             
             // New modal navigation
             if (navContent) navContent.addEventListener('click', () => {
@@ -767,7 +809,10 @@
                     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
-            if (toggleReadingMode) toggleReadingMode.addEventListener('click', () => modal.classList.toggle('reading-mode'));
+            if (toggleReadingMode) toggleReadingMode.addEventListener('click', () => {
+                const modal = document.getElementById('modal');
+                if (modal) modal.classList.toggle('reading-mode');
+            });
             
             // --- Start the application ---
             init();
