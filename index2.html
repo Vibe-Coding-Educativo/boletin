@@ -1411,22 +1411,42 @@
             function scrollToHeading(headingId) {
                 const heading = document.getElementById(headingId);
                 if (heading) {
-                    // Calculate offset for fixed header
-                    const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
-                    const elementPosition = heading.offsetTop;
-                    const offsetPosition = elementPosition - headerHeight - 20; // Extra 20px padding
-                    
                     // Get the scrollable container (the modal content area)
                     const scrollContainer = heading.closest('.overflow-y-auto');
+                    
                     if (scrollContainer) {
+                        // Calculate offset for fixed header and add extra padding
+                        const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
+                        const elementPosition = heading.offsetTop;
+                        const offsetPosition = elementPosition - headerHeight - 40; // Extra 40px padding for better readability
+                        
                         scrollContainer.scrollTo({
-                            top: offsetPosition,
+                            top: Math.max(0, offsetPosition), // Ensure we don't scroll to negative values
                             behavior: 'smooth'
                         });
                     } else {
-                        // Fallback to regular scroll
-                        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Fallback - scroll to start position with offset
+                        const headerHeight = 100; // Conservative estimate
+                        const targetPosition = heading.offsetTop - headerHeight;
+                        
+                        window.scrollTo({
+                            top: Math.max(0, targetPosition),
+                            behavior: 'smooth'
+                        });
                     }
+                    
+                    // Optional: Add a subtle highlight to the heading that was navigated to
+                    heading.style.background = 'linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 50%)';
+                    heading.style.paddingLeft = '1rem';
+                    heading.style.marginLeft = '-1rem';
+                    heading.style.transition = 'all 0.3s ease';
+                    
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        heading.style.background = '';
+                        heading.style.paddingLeft = '';
+                        heading.style.marginLeft = '';
+                    }, 2000);
                 }
             }
 
