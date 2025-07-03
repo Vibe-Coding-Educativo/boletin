@@ -863,20 +863,32 @@
             function processMarkdownContent(content) {
                 if (!content) return '';
                 
-                // Fix common markdown link issues
-                let processed = content
-                    // Fix links that might have undefined in them
-                    .replace(/\[([^\]]*)\]\(undefined\)/g, '[$1](#)')
-                    .replace(/\[([^\]]*)\]\(\s*\)/g, '[$1](#)')
-                    // Fix URLs that appear as plain text
-                    .replace(/(https?:\/\/[^\s\)]+)/g, '[$1]($1)')
-                    // Fix broken markdown links
-                    .replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
-                        if (!url || url.trim() === '' || url === 'undefined') {
-                            return text; // Just return the text if no valid URL
-                        }
-                        return `[${text}](${url})`;
+                // First, let's protect existing markdown links by temporarily replacing them
+                const linkPlaceholders = new Map();
+                let placeholderCounter = 0;
+                
+                // Find and replace existing markdown links with placeholders
+                let processed = content.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
+                    if (!url || url.trim() === '' || url === 'undefined') {
+                        return text; // Just return the text if no valid URL
+                    }
+                    const placeholder = `__LINK_PLACEHOLDER_${placeholderCounter++}__`;
+                    linkPlaceholders.set(placeholder, `[${text}](${url})`);
+                    return placeholder;
+                });
+                
+                // Now fix other issues
+                processed = processed
+                    // Fix links that might have undefined in them (these are already handled above)
+                    // Convert plain URLs to markdown links (now safe since existing links are protected)
+                    .replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
+                        return `[${match}](${match})`;
                     });
+                
+                // Restore the original markdown links
+                linkPlaceholders.forEach((originalLink, placeholder) => {
+                    processed = processed.replace(placeholder, originalLink);
+                });
                 
                 return processed;
             }
@@ -906,7 +918,7 @@
                 
                 const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
                 if (headings.length === 0) {
-                    return '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>';
+                    return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>', content: htmlContent };
                 }
                 
                 let tocHtml = '<nav class="space-y-2">';
@@ -915,7 +927,7 @@
                     const text = heading.textContent.trim();
                     const id = `heading-${index}`;
                     
-                    // Add ID to the original heading for navigation
+                    // Add ID to the heading
                     heading.id = id;
                     
                     // Calculate indentation based on heading level
@@ -925,14 +937,14 @@
                         <a href="#${id}" 
                            class="block text-sm hover:text-amber-600 dark:hover:text-amber-400 transition-colors py-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
                            style="margin-left: ${indent}rem;"
-                           onclick="scrollToHeading('${id}')">
+                           data-heading-id="${id}">
                             ${text}
                         </a>
                     `;
                 });
                 tocHtml += '</nav>';
                 
-                return tocHtml;
+                return { toc: tocHtml, content: tempDiv.innerHTML };
             }
 
             function openModal(id) {
@@ -991,12 +1003,17 @@
                         const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
                         let htmlContent = marked.parse(processedBody);
                         htmlContent = processExternalLinks(htmlContent);
+                        
+                        // Generate TOC and get content with IDs
+                        const tocData = generateTableOfContents(htmlContent);
+                        htmlContent = tocData.content; // Use the content with IDs added
+                        
                         bodyElement.innerHTML = htmlContent;
                         bodyElement.style.opacity = '1';
                         bodyElement.classList.add('content-fade-in');
                         
-                        // Generate and store TOC
-                        window.currentTOC = generateTableOfContents(htmlContent);
+                        // Store TOC
+                        window.currentTOC = tocData.toc;
                     }
                     
                     // Set FAQ (both desktop sidebar and mobile)
@@ -1050,7 +1067,22 @@
             function scrollToHeading(headingId) {
                 const heading = document.getElementById(headingId);
                 if (heading) {
-                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Calculate offset for fixed header
+                    const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
+                    const elementPosition = heading.offsetTop;
+                    const offsetPosition = elementPosition - headerHeight - 20; // Extra 20px padding
+                    
+                    // Get the scrollable container (the modal content area)
+                    const scrollContainer = heading.closest('.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Fallback to regular scroll
+                        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             }
 
@@ -1198,7 +1230,7 @@
                 return ''; // Return empty if no known media type is found
             }
 
-            // --- Event Listeners ---
+            // Event Listeners
             document.body.addEventListener('click', function(event) {
                 if (event.target.classList.contains('tag')) {
                     event.stopPropagation();
@@ -1214,6 +1246,12 @@
                 if (event.target.classList.contains('collapse-keywords')) {
                     event.stopPropagation();
                     collapseCardKeywords(event.target.dataset.cardId);
+                }
+                // Handle TOC link clicks
+                if (event.target.dataset.headingId) {
+                    event.preventDefault();
+                    const headingId = event.target.dataset.headingId;
+                    scrollToHeading(headingId);
                 }
             });
             
