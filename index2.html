@@ -843,6 +843,27 @@
                 applyFilters(); // Re-render to show collapsed keywords
             }
             
+            function processMarkdownContent(content) {
+                if (!content) return '';
+                
+                // Fix common markdown link issues
+                let processed = content
+                    // Fix links that might have undefined in them
+                    .replace(/\[([^\]]*)\]\(undefined\)/g, '[$1](#)')
+                    .replace(/\[([^\]]*)\]\(\s*\)/g, '[$1](#)')
+                    // Fix URLs that appear as plain text
+                    .replace(/(https?:\/\/[^\s\)]+)/g, '[$1]($1)')
+                    // Fix broken markdown links
+                    .replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
+                        if (!url || url.trim() === '' || url === 'undefined') {
+                            return text; // Just return the text if no valid URL
+                        }
+                        return `[${text}](${url})`;
+                    });
+                
+                return processed;
+            }
+
             function openModal(id) {
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
@@ -881,17 +902,27 @@
                 // Reset reading mode
                 modal.classList.remove('reading-mode');
                 
+                // Configure marked.js options
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: false,
+                    mangle: false
+                });
+
                 // Load content with delay for smooth transition
                 setTimeout(() => {
                     // Set content
                     if (bodyElement) {
-                        bodyElement.innerHTML = marked.parse(item.body || '*No hay contenido disponible.*');
+                        const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
+                        bodyElement.innerHTML = marked.parse(processedBody);
                         bodyElement.style.opacity = '1';
                         bodyElement.classList.add('content-fade-in');
                     }
                     
                     // Set FAQ (both desktop sidebar and mobile)
-                    const faqContent = marked.parse(item.faq || '*No hay preguntas frecuentes.*');
+                    const processedFaq = processMarkdownContent(item.faq || '*No hay preguntas frecuentes.*');
+                    const faqContent = marked.parse(processedFaq);
                     if (faqDesktopElement) {
                         faqDesktopElement.innerHTML = faqContent;
                         faqDesktopElement.style.opacity = '1';
