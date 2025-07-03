@@ -427,11 +427,11 @@
                 <div class="flex items-center gap-3">
                     <!-- Quick navigation -->
                     <nav class="hidden md:flex items-center gap-3 text-sm">
-                        <button id="nav-content" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">Contenido</button>
+                        <button id="nav-content" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Contenido</button>
                         <span class="text-slate-300 dark:text-slate-600">|</span>
-                        <button id="nav-faq" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">FAQ</button>
+                        <button id="nav-faq" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">FAQ</button>
                         <span class="text-slate-300 dark:text-slate-600">|</span>
-                        <button id="toggle-reading-mode" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                        <button id="toggle-reading-mode" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800" title="Modo lectura">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
@@ -487,6 +487,17 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Configure marked.js to open all links in new tab
+            const renderer = new marked.Renderer();
+            renderer.link = function(href, title, text) {
+                const titleAttr = title ? ` title="${title}"` : '';
+                return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+            };
+            marked.setOptions({
+                renderer: renderer,
+                breaks: true,
+                gfm: true
+            });
             // --- THEME MANAGEMENT ---
             const themeToggle = document.getElementById('theme-toggle');
             const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
@@ -1060,23 +1071,73 @@
             
             // New modal navigation
             if (navContent) navContent.addEventListener('click', () => {
-                const contentElement = document.getElementById('modal-body-content');
+                // Visual feedback
+                navContent.style.backgroundColor = 'rgb(245 158 11)';
+                navContent.style.color = 'white';
+                setTimeout(() => {
+                    navContent.style.backgroundColor = '';
+                    navContent.style.color = '';
+                }, 200);
+                
+                // Reset reading mode first to ensure content is visible
+                const modal = document.getElementById('modal');
+                if (modal) modal.classList.remove('reading-mode');
+                
+                // Find the main content area and scroll to it
+                const contentElement = document.querySelector('#modal-body-content') || document.querySelector('article');
                 if (contentElement) {
-                    contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Scroll to top of modal first, then to content
+                    const modalContent = document.querySelector('#modal .overflow-y-auto');
+                    if (modalContent) {
+                        modalContent.scrollTop = 0;
+                    }
+                    setTimeout(() => {
+                        contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
                 }
             });
+            
             if (navFaq) navFaq.addEventListener('click', () => {
+                // Visual feedback
+                navFaq.style.backgroundColor = 'rgb(245 158 11)';
+                navFaq.style.color = 'white';
+                setTimeout(() => {
+                    navFaq.style.backgroundColor = '';
+                    navFaq.style.color = '';
+                }, 200);
+                
+                // Reset reading mode first to ensure FAQ is visible
+                const modal = document.getElementById('modal');
+                if (modal) modal.classList.remove('reading-mode');
+                
                 // In desktop, scroll to sidebar; in mobile, scroll to mobile FAQ section
                 const isDesktop = window.innerWidth >= 1024;
-                const targetId = isDesktop ? 'modal-sidebar' : 'mobile-faq';
-                const element = document.getElementById(targetId);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                let targetElement;
+                
+                if (isDesktop) {
+                    targetElement = document.getElementById('modal-sidebar') || document.getElementById('modal-faq-content');
+                } else {
+                    targetElement = document.getElementById('mobile-faq') || document.getElementById('modal-faq-mobile');
+                }
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    // Fallback: scroll to bottom where FAQ should be
+                    const modalContent = document.querySelector('#modal .overflow-y-auto');
+                    if (modalContent) {
+                        modalContent.scrollTop = modalContent.scrollHeight;
+                    }
                 }
             });
             if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
                 const modal = document.getElementById('modal');
-                if (modal) modal.classList.toggle('reading-mode');
+                if (modal) {
+                    modal.classList.toggle('reading-mode');
+                    // Update tooltip text based on mode
+                    const isReading = modal.classList.contains('reading-mode');
+                    toggleReadingModeBtn.setAttribute('title', isReading ? 'Salir del modo lectura' : 'Modo lectura');
+                }
             });
             
             // --- Start the application ---
