@@ -196,7 +196,6 @@
             applyTheme(savedTheme);
             updateToggleIcon(savedTheme);
 
-            // Listen for system changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 if (localStorage.getItem('theme') === 'system') {
                     applyTheme('system');
@@ -225,6 +224,7 @@
             // --- State ---
             let allNewsletters = [];
             let activeKeyword = null;
+            let yearUrls = {}; // Holds the config { year: url }
             
             // --- Config URLs ---
             const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
@@ -235,13 +235,13 @@
                 try {
                     const response = await fetch(CONFIG_URL);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const yearUrls = await response.json();
+                    yearUrls = await response.json(); // Assign to the shared variable
                     
-                    populateYearSelector(yearUrls);
+                    populateYearSelector();
                     
                     const selectedYear = yearSelector.value;
                     if (selectedYear) {
-                        await loadAndProcessData(yearUrls, selectedYear);
+                        await loadAndProcessData(selectedYear);
                     }
                 } catch (error) {
                     console.error("Error initializing app:", error);
@@ -250,7 +250,7 @@
             }
 
             // --- Data Loading and Processing ---
-            function populateYearSelector(yearUrls) {
+            function populateYearSelector() {
                 const years = Object.keys(yearUrls).sort((a, b) => b - a);
                 if (years.length === 0) {
                     showError("No se encontraron años en la configuración.");
@@ -265,7 +265,7 @@
                 }
             }
 
-            async function loadAndProcessData(yearUrls, year) {
+            async function loadAndProcessData(year) {
                 showLoader(true);
                 newsletterGrid.innerHTML = '';
                 noResults.classList.add('hidden');
@@ -289,7 +289,7 @@
                     
                     populateFilterOptions(allNewsletters);
                     populateKeywordCloud(allNewsletters);
-                    renderCards(allNewsletters);
+                    applyFilters(); // Use applyFilters to render initial cards
 
                 } catch (error) {
                     console.error(`Error loading data for year ${year}:`, error);
@@ -477,8 +477,7 @@
 
             // --- Event Listeners ---
             yearSelector.addEventListener('change', (e) => {
-                const year = e.target.value;
-                init().then(() => loadAndProcessData(yearUrls, year));
+                loadAndProcessData(e.target.value);
             });
             searchInput.addEventListener('input', applyFilters);
             monthFilter.addEventListener('change', applyFilters);
