@@ -35,7 +35,15 @@
             box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.1), 0 4px 6px -2px rgba(245, 158, 11, 0.05);
         }
         .tag {
+            cursor: pointer;
             transition: background-color 0.2s, color 0.2s;
+        }
+        .tag.active {
+            background-color: #f59e0b; /* amber-500 */
+            color: #1e293b; /* slate-800 */
+        }
+        .dark .tag.active {
+            color: #ffffff;
         }
         .loader {
             animation: spin 1s linear infinite;
@@ -226,6 +234,7 @@
 
             // --- State ---
             let allNewsletters = [];
+            let activeKeywords = [];
             let yearUrls = {};
             
             // --- Config URLs ---
@@ -432,18 +441,41 @@
                         const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
                         const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
                         
+                        const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
+
                         const searchMatch = normalizedSearchTerm === '' ||
                             normalizeText(item.title).includes(normalizedSearchTerm) ||
                             normalizeText(item.summary).includes(normalizedSearchTerm) ||
                             item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
 
-                        return monthMatch && weekMatch && searchMatch;
+                        return monthMatch && weekMatch && keywordMatch && searchMatch;
                     } catch (e) {
                         console.error("Error filtering item:", item, e);
                         return false;
                     }
                 });
                 renderCards(filtered);
+            }
+            
+            function toggleKeywordFilter(keyword) {
+                searchInput.value = '';
+                const keywordIndex = activeKeywords.indexOf(keyword);
+
+                if (keywordIndex > -1) {
+                    activeKeywords.splice(keywordIndex, 1);
+                } else {
+                    activeKeywords.push(keyword);
+                }
+                
+                document.querySelectorAll('.tag').forEach(tagEl => {
+                    if (activeKeywords.includes(tagEl.textContent)) {
+                        tagEl.classList.add('active');
+                    } else {
+                        tagEl.classList.remove('active');
+                    }
+                });
+
+                applyFilters();
             }
             
             function openModal(id) {
@@ -541,6 +573,10 @@
 
             // --- Event Listeners ---
             document.body.addEventListener('click', function(event) {
+                if (event.target.classList.contains('tag')) {
+                    event.stopPropagation();
+                    toggleKeywordFilter(event.target.textContent);
+                }
                 if (event.target.classList.contains('read-more-btn')) {
                     openModal(event.target.dataset.id);
                 }
