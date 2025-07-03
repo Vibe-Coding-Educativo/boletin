@@ -6,13 +6,7 @@
     <title>Boletín Vibe Coding Educativo</title>
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tailwind CSS Config -->
-    <script>
-        tailwind.config = {
-          darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
-        }
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
     
     <!-- Marked.js for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -27,6 +21,9 @@
         /* This is development/demo version only */
         body {
             font-family: 'Inter', sans-serif;
+        }
+        .dark {
+            color-scheme: dark;
         }
         .card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -571,10 +568,13 @@
             const systemIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`;
 
             function applyTheme(theme) {
+                const html = document.documentElement;
                 if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
+                    html.classList.add('dark');
+                    html.style.colorScheme = 'dark';
                 } else {
-                    document.documentElement.classList.remove('dark');
+                    html.classList.remove('dark');
+                    html.style.colorScheme = 'light';
                 }
             }
 
@@ -795,7 +795,14 @@
                         const keywordTags = keywordsToShow.map(kw => {
                             const isActive = activeKeywords.includes(kw);
                             const activeClass = isActive ? 'bg-amber-500 text-slate-800 dark:text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300';
-                            return `<span class="tag text-xs px-2 py-0.5 rounded ${activeClass}">${kw}</span>`;
+                            // Escapar caracteres especiales en las keywords
+                            const safeKeyword = kw
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#39;');
+                            return `<span class="tag text-xs px-2 py-0.5 rounded ${activeClass}">${safeKeyword}</span>`;
                         }).join('');
                         
                         const remainingCount = item.keywords.length - 3;
@@ -807,11 +814,24 @@
                             ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
                             : '';
 
+                        // Escapar contenido HTML
+                        const safeTitle = item.title
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;');
+                        
+                        const safeSummary = item.summary
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;');
+
                         card.innerHTML = `
                             <div class="p-5 flex-grow flex flex-col">
                                 <p class="text-sm text-amber-600 dark:text-amber-400 mb-1 font-semibold">${item.dateInfo.displayDate}</p>
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
-                                <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${safeTitle}</h3>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${safeSummary}</p>
                                 <div class="flex flex-wrap gap-1 mt-2">
                                     ${keywordTags}
                                     ${expandButton}
@@ -1023,8 +1043,14 @@
                     const match = line.match(/^(#{1,4})\s+(.+)/);
                     if (match) {
                         const level = match[1].length;
-                        const text = match[2].trim();
-                        const id = `heading-${index}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
+                        const text = match[2].trim()
+                            .replace(/\*/g, '') // Remove markdown bold/italic
+                            .replace(/`/g, '') // Remove inline code
+                            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Convert links to just text
+                        const id = `heading-${index}-${text.toLowerCase()
+                            .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+                            .replace(/\s+/g, '-') // Replace spaces with hyphens
+                            .replace(/^-+|-+$/g, '')}`; // Remove leading/trailing hyphens
                         headings.push({ level, text, id });
                     }
                 });
@@ -1060,7 +1086,17 @@
                 }
                 
                 container.innerHTML = headings.map(heading => {
-                    return `<a href="#${heading.id}" class="toc-item toc-h${heading.level}" data-heading-id="${heading.id}">${heading.text}</a>`;
+                    // Escapar caracteres especiales en el texto
+                    const safeText = heading.text
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;')
+                        .replace(/\n/g, ' ')
+                        .replace(/\r/g, ' ');
+                    
+                    return `<a href="#${heading.id}" class="toc-item toc-h${heading.level}" data-heading-id="${heading.id}">${safeText}</a>`;
                 }).join('');
             }
             
