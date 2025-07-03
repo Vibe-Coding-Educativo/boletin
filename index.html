@@ -365,9 +365,36 @@
         
         audio {
             filter: invert(0.1);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        audio:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
         }
         .dark audio {
-            filter: invert(1) sepia(1) saturate(0.5) hue-rotate(180deg);
+            filter: invert(0.9) sepia(0.1) saturate(0.8) hue-rotate(180deg);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+        }
+        .dark audio:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
+        }
+
+        /* Audio player in cards */
+        .media-container audio {
+            margin: 0;
+            width: 100%;
+        }
+
+        /* Audio player in full size modal */
+        #modal-video-container audio {
+            max-width: 100%;
+            margin: 0 auto;
         }
 
     </style>
@@ -556,6 +583,7 @@
             let activeKeywords = [];
             let expandedCards = new Set();
             let yearUrls = {};
+            let currentAudio = null; // Global audio management
             
             // --- Config URLs ---
             const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
@@ -566,6 +594,45 @@
                 if (!text) return '';
                 return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             };
+
+            // Audio management functions
+            function pauseCurrentAudio() {
+                if (currentAudio && !currentAudio.paused) {
+                    currentAudio.pause();
+                }
+            }
+
+            function setCurrentAudio(audioElement) {
+                pauseCurrentAudio(); // Pause any existing audio
+                currentAudio = audioElement;
+            }
+
+            function createAudioPlayer(src, isFullSize = false) {
+                const audioId = `audio-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const controlsClass = isFullSize ? "w-full" : "w-full";
+                
+                const audioHTML = `
+                    <audio id="${audioId}" controls class="${controlsClass}" preload="metadata">
+                        <source src="${src}" type="audio/mpeg">
+                        <source src="${src}" type="audio/mp4">
+                        <source src="${src}" type="audio/wav">
+                        <source src="${src}" type="audio/ogg">
+                        Tu navegador no soporta el elemento de audio.
+                    </audio>
+                `;
+                
+                // We'll attach the event listener after the element is added to DOM
+                setTimeout(() => {
+                    const audioElement = document.getElementById(audioId);
+                    if (audioElement) {
+                        audioElement.addEventListener('play', () => {
+                            setCurrentAudio(audioElement);
+                        });
+                    }
+                }, 100);
+                
+                return audioHTML;
+            }
 
             // --- Initialization ---
             async function init() {
@@ -608,6 +675,9 @@
             async function loadAndProcessData(year) {
                 const newsletterGrid = document.getElementById('newsletter-grid');
                 const noResults = document.getElementById('no-results');
+                
+                // Pause any currently playing audio when changing data
+                pauseCurrentAudio();
                 
                 showLoader(true);
                 if (newsletterGrid) {
@@ -951,6 +1021,9 @@
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
                 
+                // Pause any currently playing audio when opening a new modal
+                pauseCurrentAudio();
+                
                 const modal = document.getElementById('modal');
                 if (!modal) return;
                 
@@ -1198,7 +1271,7 @@
                 const match = url.match(regExp);
                 return (match && match[2].length === 11) ? match[2] : null;
             }
-
+            
             function generateMediaEmbed(link, fullSize = false) {
                 if (!link) return '';
                 
@@ -1211,12 +1284,38 @@
                     }
                 }
                 
+                // Check for audio files (MP3, WAV, OGG, M4A)
                 if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
-                    const type = link.match(/\.(mp3|wav|ogg|m4a)$/i)[1];
-                    const audioElement = fullSize 
-                        ? `<div class="w-full max-w-2xl mx-auto mb-8"><audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio></div>`
-                        : `<audio controls class="w-full"><source src="${link}" type="audio/${type === 'm4a' ? 'mp4' : type}">Tu navegador no soporta el elemento de audio.</audio>`;
-                    return audioElement;
+                    const audioElement = createAudioPlayer(link, fullSize);
+                    if (fullSize) {
+                        return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
+                    } else {
+                        return audioElement;
+                    }
+                }
+
+                // Check for direct links to audio files in common hosting services
+                if (link.includes('drive.google.com') && link.includes('export=download')) {
+                    const audioElement = createAudioPlayer(link, fullSize);
+                    if (fullSize) {
+                        return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
+                    } else {
+                        return audioElement;
+                    }
+                }
+
+                // Check for other audio hosting services
+                if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)/i) || 
+                    link.includes('soundcloud.com') ||
+                    link.includes('anchor.fm') ||
+                    link.includes('podcast') ||
+                    link.toLowerCase().includes('audio')) {
+                    const audioElement = createAudioPlayer(link, fullSize);
+                    if (fullSize) {
+                        return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
+                    } else {
+                        return audioElement;
+                    }
                 }
 
                 if (link.includes('ivoox.com')) {
