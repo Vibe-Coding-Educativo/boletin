@@ -10,7 +10,7 @@
     <!-- Tailwind CSS Config -->
     <script>
         tailwind.config = {
-          darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
+            darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
         }
     </script>
     
@@ -76,8 +76,8 @@
         /* Reading mode transitions */
         #modal-sidebar {
             transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                       opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                       transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             transform: translateX(0);
             opacity: 1;
         }
@@ -90,8 +90,8 @@
         
         article {
             transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                       padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                       margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                        padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .reading-mode article {
             max-width: 65ch; /* Optimal reading width */
@@ -115,7 +115,7 @@
         /* Enhanced modal transitions */
         #modal {
             transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                       backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                        backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             backdrop-filter: blur(0px);
         }
@@ -125,7 +125,7 @@
         }
         #modal > div {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                       opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             transform: scale(0.96) translateY(40px);
             opacity: 0;
         }
@@ -188,8 +188,8 @@
         /* Card animations */
         .card {
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                       box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                       opacity 0.3s ease-in-out;
+                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease-in-out;
         }
         .card:hover {
             transform: translateY(-8px);
@@ -636,9 +636,7 @@
     
     <!-- Footer -->
     <footer id="page-footer" class="mt-12 py-6 border-t border-slate-200 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400 text-sm">
-        <p>Laboratorio de aplicaciones educativas - <a href="https://labia.tiddlyhost.com" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">labia.tiddlyhost.com</a></p>
-        <p>Aplicación hecha por Juan José de Haro - <a href="https://bilateria.org" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">bilateria.org</a></p>
-        <p><a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" class="hover:text-amber-600 dark:hover:text-amber-500">Licencia Creative Commons BY-SA</a></p>
+        <!-- Contenido del pie de página eliminado según la solicitud -->
     </footer>
 
     <script>
@@ -1541,13 +1539,13 @@
                 // Extract week number from the first part (format: AÑO-SEMANA)
                 const yearWeekPart = parts[0];
                 const yearWeekMatch = yearWeekPart.match(/^(\d{4})-(\d+)$/);
-                const weekNumber = yearWeekMatch ? parseInt(yearWeekMatch[2]) : null;
+                const weekNumber = yearWeekMatch ? parseInt(yearWeekMatch[2], 10) : null;
                 
                 const startDate = new Date(parts[1]);
                 const endDate = new Date(parts[2]);
 
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-                     return { startDate: null, endDate: null, displayDate: 'Fecha inválida', weekNumber };
+                    return { startDate: null, endDate: null, displayDate: 'Fecha inválida', weekNumber };
                 }
 
                 const startDay = startDate.toLocaleDateString('es-ES', { day: 'numeric' });
@@ -1557,13 +1555,16 @@
                 const year = endDate.getFullYear();
 
                 let displayDate;
-                const weekPrefix = weekNumber ? `Semana ${weekNumber} ` : 'Semana ';
-                
+                const weekText = weekNumber ? `Semana ${weekNumber}` : '';
+
+                let dateRangeText;
                 if (startMonth === endMonth) {
-                    displayDate = `${weekPrefix}del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
+                    dateRangeText = `del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
                 } else {
-                    displayDate = `${weekPrefix}del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
+                    dateRangeText = `del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
                 }
+                
+                displayDate = weekText ? `${weekText}: ${dateRangeText}` : dateRangeText;
                 
                 return { startDate, endDate, displayDate, weekNumber };
             }
