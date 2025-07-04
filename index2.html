@@ -871,6 +871,10 @@
             // --- Initialization ---
             async function init() {
                 try {
+                    // Test week number calculation
+                    const testDate = new Date('2025-06-23'); // June 23, 2025 should be week 26
+                    console.log('Test week calculation for June 23, 2025:', getWeekNumber(testDate));
+                    
                     const response = await fetch(CONFIG_URL);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     yearUrls = await response.json();
@@ -1561,20 +1565,22 @@
                 return { startDate, endDate, displayDate };
             }
 
-            function getWeekNumber(d) {
-                // Create a copy of the date to avoid modifying the original
-                const date = new Date(d.getTime());
+            function getWeekNumber(date) {
+                // Ensure we have a valid date
+                if (!date || isNaN(date.getTime())) {
+                    console.log('Invalid date provided to getWeekNumber:', date);
+                    return 1;
+                }
                 
-                // Set to nearest Thursday: current date + 4 - current day number
-                // Make Sunday's day number 7
-                const dayNum = date.getDay() || 7;
-                date.setDate(date.getDate() + 4 - dayNum);
+                // Simple method: get week number using a more straightforward calculation
+                const year = date.getFullYear();
+                const startOfYear = new Date(year, 0, 1);
+                const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000)) + 1;
+                const weekNumber = Math.ceil(days / 7);
                 
-                // Get first day of year
-                const yearStart = new Date(date.getFullYear(), 0, 1);
+                console.log(`Week calculation: date=${date.toDateString()}, days=${days}, week=${weekNumber}`);
                 
-                // Calculate full weeks to nearest Thursday
-                return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                return Math.max(1, Math.min(53, weekNumber));
             }
             
             function getWeekDates(weekNumber, year) {
