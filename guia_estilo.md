@@ -32,7 +32,7 @@ Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las
 
 **3. titulo_boletin**
 * **Tarea:** Redacta un título conciso que refleje los temas más importantes tratados en **[JSON_CONVERSACIONES]**.
-* **Formato sugerido:** "Boletín semanal de IA educativa: [tema destacado]".
+* **Formato sugerido:** "[Tema destacado]".
 * **Restricción:** El tema destacado debe ser representativo de la semana y no debe repetir títulos de boletines anteriores.
 
 **4. resumen**
@@ -59,26 +59,25 @@ Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las
         * Crea una sección con el título `### Glosario de términos`.
         * Identifica los términos técnicos o jerga mencionados en las conversaciones.
         * Explícalos en orden alfabético de forma clara y, si es posible, con ejemplos aplicados a la educación.
-    * **Repositorio de la comunidad.**
-        * Inserta el siguiente bloque de texto exacto:
-            ```markdown
-            ### Visita nuestro repositorio de aplicaciones
-            No olvides consultar el [Repositorio de Aplicaciones Educativas](https://vibe-coding-educativo.github.io/app_edu/) donde recopilamos todos los proyectos de la comunidad.
             ```
     * **Nota final obligatoria.**
         * Incluye la siguiente nota exacta al final de todo el cuerpo:
-            *Este resumen ha sido generado por Gemini a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones.*
+            *Este resumen ha sido generado mediante inteligencia artificial genertiva a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones.*
 
 **6. enlace_podcast_youtube**
 * **Tarea:** Inserta aquí directamente el valor de la entrada **[ENLACE_PODCAST]**. Si no se proporciona, deja este campo vacío.
 
 **7. seccion_faq**
-* **Tarea:** Analiza **[JSON_CONVERSACIONES]** en busca de preguntas explícitas que hayan obtenido una respuesta clara y útil.
-* **Formato:** Si encuentras alguna, formatea la sección como una lista de preguntas y respuestas. Si no hay, deja este campo vacío.
+* **Tarea:** Analiza **[JSON_CONVERSACIONES]** en busca de preguntas explícitas que hayan obtenido una respuesta clara y útil. Intenta crear entre 5 y 10 preguntas.
+* **Formato:** Formatea la sección como una lista de preguntas y respuestas. 
 
 **8. palabras_clave**
 * **Tarea:** Extrae entre 5 y 7 de las palabras clave o etiquetas más relevantes de los temas tratados.
 * **Formato:** Una única cadena de texto con las palabras separadas por comas.
+* **Palabras clave prohibidas**:
+    * Vibe Coding
+    * IA educativa
+  
 
 ## Fase 2: Generación del Script de Publicación
 
