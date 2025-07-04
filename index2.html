@@ -1562,10 +1562,19 @@
             }
 
             function getWeekNumber(d) {
-                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                // Create a copy of the date to avoid modifying the original
+                const date = new Date(d.getTime());
+                
+                // Set to nearest Thursday: current date + 4 - current day number
+                // Make Sunday's day number 7
+                const dayNum = date.getDay() || 7;
+                date.setDate(date.getDate() + 4 - dayNum);
+                
+                // Get first day of year
+                const yearStart = new Date(date.getFullYear(), 0, 1);
+                
+                // Calculate full weeks to nearest Thursday
+                return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
             }
             
             function getWeekDates(weekNumber, year) {
