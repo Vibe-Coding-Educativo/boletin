@@ -59,10 +59,10 @@ Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las
         * Crea una sección con el título `### Glosario de términos`.
         * Identifica los términos técnicos o jerga mencionados en las conversaciones.
         * Explícalos en orden alfabético de forma clara y, si es posible, con ejemplos aplicados a la educación.
-            ```
+  
     * **Nota final obligatoria.**
         * Incluye la siguiente nota exacta al final de todo el cuerpo:
-            *Este resumen ha sido generado mediante inteligencia artificial genertiva a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones.*
+            *Este resumen ha sido generado mediante inteligencia artificial generativa a partir de las conversaciones del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca) y puede contener omisiones, errores o imprecisiones.*
 
 **6. enlace_podcast_youtube**
 * **Tarea:** Inserta aquí directamente el valor de la entrada **[ENLACE_PODCAST]**. Si no se proporciona, deja este campo vacío.
