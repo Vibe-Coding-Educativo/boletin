@@ -105,7 +105,7 @@ Una vez que yo apruebe el borrador, tu única tarea es generar un bloque de cód
     * **Control de formato:** Para evitar que la fila insertada se expanda verticalmente, el script debe:
         1.  Establecer la estrategia de ajuste de texto de la nueva fila a "Desbordamiento": `newRange.setWrapStrategy(SpreadsheetApp.WrapStrategy.OVERFLOW);`
         2.  Fijar la altura de la fila a 21 píxeles: `sheet.setRowHeight(nextRow, 21);`
-* **Flujo para el usuario:** Al final del proceso, yo (la IA) te proporcionaré el script final en una caja de código. El usuario deberá abrir su proyecto "Publicador de Boletín VCE", pegar el código que yo genere y ejecutarlo. La URL para acceder al editor de código es: [https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit](https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit)
+* **Flujo para el usuario:** Al final del proceso, yo (la IA) te proporcionaré el script final en una caja de código **junto con el enlace al editor del proyecto**. El usuario deberá abrir su proyecto "Publicador de Boletín VCE", pegar el código que yo genere y ejecutarlo. La URL para acceder al editor de código es: [https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit](https://script.google.com/home/projects/1E8jtkAQlaZG0_IjdZUgRzZbSK3cSfmCNERXKyAGJ2CnLSgpCEIH87Naf/edit)
 
 # Estilo, Tonalidad y Errores a Evitar
 
