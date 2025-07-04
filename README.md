@@ -31,7 +31,6 @@ Este proyecto es una página web que muestra de forma interactiva los boletines 
 ## Autor
 
 * **Juan José de Haro**: [https://bilateria.org](https://bilateria.org)
-* **Laboratorio de aplicaciones educativas**: [https://labia.tiddlyhost.com](https://labia.tiddlyhost.com)
 
 ## Licencia
 
