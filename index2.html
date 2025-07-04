@@ -1121,7 +1121,7 @@
                     if (!date || isNaN(date.getTime())) return;
                     
                     months.add(date.getMonth());
-                    weeks.add(getISOWeekNumber(date));
+                    weeks.add(getWeekNumber(date));
                     
                     // Get the year from the newsletter data
                     if (!currentYear) {
@@ -1154,7 +1154,7 @@
                         if (!date || isNaN(date.getTime())) return false;
 
                         const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
-                        const weekMatch = selectedWeek === '' || getISOWeekNumber(date).toString() === selectedWeek;
+                        const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
                         
                         const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
 
@@ -1533,16 +1533,21 @@
             
             function parseIdToDateInfo(idString) {
                 if (!idString || typeof idString !== 'string') {
-                    return { startDate: null, endDate: null, displayDate: 'Fecha no disponible' };
+                    return { startDate: null, endDate: null, displayDate: 'Fecha no disponible', weekNumber: null };
                 }
                 const parts = idString.split('_');
-                if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString };
+                if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString, weekNumber: null };
+                
+                // Extract week number from the first part (format: AÑO-SEMANA)
+                const yearWeekPart = parts[0];
+                const yearWeekMatch = yearWeekPart.match(/^(\d{4})-(\d+)$/);
+                const weekNumber = yearWeekMatch ? parseInt(yearWeekMatch[2]) : null;
                 
                 const startDate = new Date(parts[1]);
                 const endDate = new Date(parts[2]);
 
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-                     return { startDate: null, endDate: null, displayDate: 'Fecha inválida' };
+                     return { startDate: null, endDate: null, displayDate: 'Fecha inválida', weekNumber };
                 }
 
                 const startDay = startDate.toLocaleDateString('es-ES', { day: 'numeric' });
@@ -1552,49 +1557,37 @@
                 const year = endDate.getFullYear();
 
                 let displayDate;
+                const weekPrefix = weekNumber ? `Semana ${weekNumber} ` : 'Semana ';
+                
                 if (startMonth === endMonth) {
-                    displayDate = `Semana del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
+                    displayDate = `${weekPrefix}del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
                 } else {
-                    displayDate = `Semana del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
+                    displayDate = `${weekPrefix}del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
                 }
                 
-                return { startDate, endDate, displayDate };
+                return { startDate, endDate, displayDate, weekNumber };
             }
 
-            function getISOWeekNumber(date) {
-                // Copiamos la fecha a UTC para evitar sorpresas con la zona horaria
-                const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-
-                // día de la semana: lunes = 0 … domingo = 6
-                const weekday = (tmp.getUTCDay() + 6) % 7;
-
-                // Saltamos al jueves de la misma semana
-                tmp.setUTCDate(tmp.getUTCDate() - weekday + 3);
-
-                // Primer jueves del año
-                const firstThursday = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 4));
-
-                // Diferencia en milisegundos / (7 días)
-                const weekNumber = 1 + Math.round((tmp - firstThursday) / 604800000);
-
-                return weekNumber;
+            function getWeekNumber(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             }
             
             function getWeekDates(weekNumber, year) {
-                // Calculate the first day of the year
+                // Get the first day of the year
                 const firstDay = new Date(year, 0, 1);
                 
-                // Find the first Thursday of the year (week 1 according to ISO)
-                const firstThursday = new Date(year, 0, 4);
-                const firstThursdayDay = firstThursday.getDay();
-                const daysToFirstMonday = firstThursdayDay === 0 ? 1 : 8 - firstThursdayDay; // Adjust to get to Monday
+                // Calculate days to add to get to the start of the specified week
+                // Week 1 is the first week with 4+ days in the new year
+                const firstThursday = new Date(year, 0, 1 + (4 - firstDay.getDay() + 7) % 7);
+                const firstWeekStart = new Date(firstThursday);
+                firstWeekStart.setDate(firstThursday.getDate() - 3); // Go back to Monday
                 
-                // First Monday of week 1
-                const firstMondayOfYear = new Date(year, 0, 4 - firstThursdayDay + 1);
-                
-                // Calculate the start of the target week (Monday)
-                const weekStart = new Date(firstMondayOfYear);
-                weekStart.setDate(firstMondayOfYear.getDate() + (weekNumber - 1) * 7);
+                // Calculate the start of the target week
+                const weekStart = new Date(firstWeekStart);
+                weekStart.setDate(firstWeekStart.getDate() + (weekNumber - 1) * 7);
                 
                 // Calculate the end of the week (Sunday)
                 const weekEnd = new Date(weekStart);
