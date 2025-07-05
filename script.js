@@ -513,9 +513,12 @@ function applyFilters() {
             
             const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
 
+            // MODIFICADO: La búsqueda ahora incluye el cuerpo y las FAQ
             const searchMatch = normalizedSearchTerm === '' ||
                 normalizeText(item.title).includes(normalizedSearchTerm) ||
                 normalizeText(item.summary).includes(normalizedSearchTerm) ||
+                normalizeText(item.body).includes(normalizedSearchTerm) ||
+                normalizeText(item.faq).includes(normalizedSearchTerm) ||
                 item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
 
             return monthMatch && weekMatch && keywordMatch && searchMatch;
