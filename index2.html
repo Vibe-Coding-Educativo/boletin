@@ -22,485 +22,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <style>
-        /* Tailwind CSS CDN warning fix - for production use proper installation */
-        /* This is development/demo version only */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.1), 0 4px 6px -2px rgba(245, 158, 11, 0.05);
-        }
-        .tag {
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .tag.active {
-            background-color: #f59e0b; /* amber-500 */
-            color: #1e293b; /* slate-800 */
-        }
-        .dark .tag.active {
-            color: #ffffff;
-        }
-        .loader {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Modal transitions */
-        #modal {
-            transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        #modal.flex {
-            opacity: 1;
-            backdrop-filter: blur(4px);
-        }
-        #modal > div {
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-            transform: scale(0.95) translateY(20px);
-            opacity: 0;
-        }
-        #modal.flex > div {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-        }
-
-        /* Reading mode transitions */
-        #modal-sidebar {
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(0);
-            opacity: 1;
-        }
-        .reading-mode #modal-sidebar {
-            width: 0 !important;
-            opacity: 0;
-            transform: translateX(100%);
-            overflow: hidden;
-        }
-        
-        article {
-            transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .reading-mode article {
-            max-width: 65ch; /* Optimal reading width */
-        }
-
-        /* Smooth content fade */
-        .content-fade-in {
-            animation: fadeInContent 0.4s ease-out forwards;
-        }
-        @keyframes fadeInContent {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Enhanced modal transitions */
-        #modal {
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        #modal.flex {
-            opacity: 1;
-            backdrop-filter: blur(8px);
-        }
-        #modal > div {
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(0.96) translateY(40px);
-            opacity: 0;
-        }
-        #modal.flex > div {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-        }
-
-        /* Content transitions */
-        #modal-body-content, #modal-faq-content, #modal-faq-mobile {
-            transition: opacity 0.2s ease-in-out;
-        }
-
-        /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Table of Contents styles */
-        #modal-faq-content nav a, #mobile-section-content nav a {
-            display: block;
-            text-decoration: none;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease-in-out;
-        }
-        #modal-faq-content nav a:hover, #mobile-section-content nav a:hover {
-            background-color: rgb(241 245 249); /* slate-100 */
-            color: rgb(217 119 6); /* amber-600 */
-            transform: translateX(4px);
-        }
-        .dark #modal-faq-content nav a:hover, .dark #mobile-section-content nav a:hover {
-            background-color: rgb(51 65 85); /* slate-700 */
-            color: rgb(251 191 36); /* amber-400 */
-        }
-
-        /* Header transitions */
-        #modal .sticky {
-            transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;
-        }
-
-        /* Button transitions */
-        .read-more-btn, .expand-keywords, .collapse-keywords {
-            transition: all 0.2s ease-in-out;
-        }
-        .read-more-btn:hover {
-            transform: translateY(-1px);
-        }
-        .expand-keywords:hover, .collapse-keywords:hover {
-            transform: scale(1.05);
-        }
-
-        /* Navigation buttons transitions */
-        #nav-content, #nav-faq, #toggle-reading-mode {
-            transition: color 0.2s ease-in-out, transform 0.1s ease-in-out;
-        }
-        #nav-content:hover, #nav-faq:hover, #toggle-reading-mode:hover {
-            transform: translateY(-1px);
-        }
-
-        /* Card animations */
-        .card {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.3s ease-in-out;
-        }
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.1), 
-                        0 10px 10px -5px rgba(245, 158, 11, 0.04);
-        }
-
-        /* Grid animations */
-        #newsletter-grid {
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-        }
-        #newsletter-grid.loaded {
-            opacity: 1;
-        }
-        #newsletter-grid .card {
-            animation: slideInUp 0.5s ease-out forwards;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        @keyframes slideInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Media container transitions */
-        #modal-video-container {
-            transition: padding 0.3s ease-in-out, margin 0.3s ease-in-out;
-        }
-
-        /* Light Theme Prose */
-        .prose-custom { 
-            color: #374151; 
-            line-height: 1.8;
-            font-size: 16px;
-            transition: all 0.3s ease-in-out;
-        }
-        .prose-custom.prose-lg {
-            font-size: 18px;
-            line-height: 1.8;
-        }
-        .prose-custom.prose-sm {
-            font-size: 14px;
-            line-height: 1.7;
-        }
-        .prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4, .prose-custom h5, .prose-custom h6 { 
-            color: #111827; 
-            font-weight: 700;
-            margin-top: 2.5rem;
-            margin-bottom: 1.25rem;
-            line-height: 1.3;
-            transition: color 0.2s ease-in-out;
-        }
-        .prose-custom h1 { 
-            font-size: 2.5rem; 
-            border-bottom: 3px solid #f59e0b; 
-            padding-bottom: 0.75rem; 
-            margin-top: 0;
-            transition: border-color 0.2s ease-in-out, font-size 0.3s ease-in-out;
-        }
-        .prose-custom h2 { 
-            font-size: 1.875rem; 
-            border-bottom: 2px solid #fbbf24; 
-            padding-bottom: 0.5rem;
-            transition: border-color 0.2s ease-in-out, font-size 0.3s ease-in-out;
-        }
-        .prose-custom h3 { 
-            font-size: 1.5rem; 
-            color: #d97706;
-            transition: color 0.2s ease-in-out, font-size 0.3s ease-in-out;
-        }
-        .prose-custom h4 { 
-            font-size: 1.25rem; 
-            color: #92400e;
-            transition: color 0.2s ease-in-out, font-size 0.3s ease-in-out;
-        }
-        .prose-custom p { 
-            margin-bottom: 1.5rem;
-            transition: margin 0.2s ease-in-out;
-        }
-        .prose-custom ul, .prose-custom ol { 
-            margin-bottom: 1.5rem; 
-            padding-left: 1.75rem;
-            transition: margin 0.2s ease-in-out, padding 0.2s ease-in-out;
-        }
-        .prose-custom li { 
-            margin-bottom: 0.75rem;
-            transition: margin 0.2s ease-in-out;
-        }
-        .prose-custom a { 
-            color: #c2410c; 
-            text-decoration: underline;
-            transition: color 0.2s ease-in-out;
-        }
-        .prose-custom a:hover { color: #ea580c; }
-        .prose-custom strong { 
-            color: #a16207; 
-            font-weight: 600;
-            transition: color 0.2s ease-in-out;
-        }
-        .prose-custom blockquote { 
-            border-left: 4px solid #f59e0b; 
-            color: #4b5563; 
-            margin: 2rem 0;
-            padding-left: 1.5rem;
-            font-style: italic;
-            background-color: #fffbeb;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            font-size: 1.1em;
-            transition: all 0.3s ease-in-out;
-        }
-        .prose-custom code { 
-            color: #be123c; 
-            background-color: #f3f4f6; 
-            padding: 0.25em 0.5em; 
-            border-radius: 0.375rem;
-            font-size: 0.875em;
-            font-family: 'Roboto Mono', monospace;
-            transition: all 0.2s ease-in-out;
-        }
-        .prose-custom pre { 
-            background-color: #f3f4f6; 
-            color: #374151;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin: 2rem 0;
-            overflow-x: auto;
-            transition: all 0.3s ease-in-out;
-        }
-        .prose-custom pre code {
-            background-color: transparent;
-            padding: 0;
-        }
-
-        /* Reading mode */
-        .reading-mode #modal-sidebar {
-            display: none !important;
-        }
-        .reading-mode article {
-            max-width: 65ch; /* Optimal reading width */
-        }
-
-        /* Media container in new layout */
-        #modal-video-container:not(:empty) {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            padding: 2rem;
-            margin-bottom: 0;
-        }
-        .dark #modal-video-container:not(:empty) {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        }
-
-        /* Dark Theme Prose */
-        .dark .prose-custom { color: #d1d5db; }
-        .dark .prose-custom h1, .dark .prose-custom h2, .dark .prose-custom h3, .dark .prose-custom h4, .dark .prose-custom h5, .dark .prose-custom h6 { color: #f9fafb; }
-        .dark .prose-custom h1 { border-bottom-color: #f59e0b; }
-        .dark .prose-custom h2 { border-bottom-color: #fbbf24; }
-        .dark .prose-custom h3 { color: #fbbf24; }
-        .dark .prose-custom h4 { color: #fde047; }
-        .dark .prose-custom a { color: #fb923c; }
-        .dark .prose-custom a:hover { color: #fdba74; }
-        .dark .prose-custom strong { color: #fde047; }
-        .dark .prose-custom blockquote { 
-            border-left-color: #f59e0b; 
-            color: #9ca3af;
-            background-color: #1f2937;
-        }
-        .dark .prose-custom code { color: #fda4af; background-color: #374151; }
-        .dark .prose-custom pre { background-color: #1f2937; color: #d1d5db; }
-        
-        audio {
-            filter: invert(0.1);
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        audio:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            transform: translateY(-1px);
-        }
-        .dark audio {
-            filter: invert(0.9) sepia(0.1) saturate(0.8) hue-rotate(180deg);
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #334155;
-        }
-        .dark audio:hover {
-            border-color: #f59e0b;
-            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
-        }
-
-        /* Audio player in cards */
-        .media-container audio {
-            margin: 0;
-            width: 100%;
-        }
-
-        /* Audio player in full size modal */
-        #modal-video-container audio {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        /* Toast notifications */
-        #toast {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        }
-        
-        /* Card highlight effect for direct links */
-        .card-highlighted {
-            position: relative;
-            animation: highlight-pulse 3s ease-in-out;
-            border: 3px solid #f59e0b !important;
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2) !important;
-            transform: scale(1.02) !important;
-            z-index: 10;
-        }
-        
-        .card-highlighted::before {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            right: -4px;
-            bottom: -4px;
-            background: linear-gradient(45deg, #f59e0b, #fbbf24, #f59e0b, #fbbf24);
-            border-radius: 12px;
-            z-index: -1;
-            animation: glow-border 3s ease-in-out;
-        }
-        
-        .card-highlighted::after {
-            content: '📍 Boletín seleccionado';
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #f59e0b;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            animation: badge-appear 3s ease-in-out;
-        }
-        
-        @keyframes highlight-pulse {
-            0% { 
-                border-color: #f59e0b;
-                box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2);
-                transform: scale(1.02);
-            }
-            50% { 
-                border-color: #fbbf24;
-                box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 15px 40px rgba(251, 191, 36, 0.3);
-                transform: scale(1.03);
-            }
-            100% { 
-                border-color: #f59e0b;
-                box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 10px 30px rgba(245, 158, 11, 0.2);
-                transform: scale(1.02);
-            }
-        }
-        
-        @keyframes glow-border {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes badge-appear {
-            0% { 
-                opacity: 0; 
-                transform: translateX(-50%) translateY(-10px) scale(0.8); 
-            }
-            20% { 
-                opacity: 1; 
-                transform: translateX(-50%) translateY(0) scale(1); 
-            }
-            80% { 
-                opacity: 1; 
-                transform: translateX(-50%) translateY(0) scale(1); 
-            }
-            100% { 
-                opacity: 0; 
-                transform: translateX(-50%) translateY(-10px) scale(0.8); 
-            }
-        }
-
-        /* Dark theme adjustments for highlighted card */
-        .dark .card-highlighted::after {
-            background: #fbbf24;
-            color: #111827;
-        }
-
-        /* Share button in cards */
-        .share-btn {
-            transition: all 0.2s ease-in-out;
-            opacity: 0.7;
-        }
-        .share-btn:hover {
-            opacity: 1;
-            transform: translateY(-1px);
-        }
-
-    </style>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
@@ -533,7 +56,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="search-input" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Buscar</label>
-                    <input type="text" id="search-input" placeholder="Buscar por título, resumen, contenido..." class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
+                    <input type="text" id="search-input" placeholder="Buscar por título, resumen..." class="w-full rounded-md shadow-sm bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-500 focus:ring-opacity-50">
                 </div>
                 <div>
                     <label for="month-filter" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Filtrar por Mes</label>
@@ -709,6 +232,7 @@
                 const url = new URL(window.location);
                 url.searchParams.set('boletin', cardId);
                 window.history.replaceState({}, '', url);
+                // No longer auto-copy to clipboard
             }
 
             function getCardIdFromURL() {
@@ -721,6 +245,7 @@
                     showToast(message);
                 }).catch(err => {
                     console.error('Error al copiar al portapapeles:', err);
+                    // Fallback for older browsers
                     const textArea = document.createElement('textarea');
                     textArea.value = text;
                     document.body.appendChild(textArea);
@@ -736,6 +261,7 @@
             }
 
             function showToast(message, type = 'success') {
+                // Remove any existing toast
                 const existingToast = document.getElementById('toast');
                 if (existingToast) {
                     existingToast.remove();
@@ -752,8 +278,10 @@
                 
                 document.body.appendChild(toast);
                 
+                // Animate in
                 setTimeout(() => toast.classList.add('translate-x-0'), 10);
                 
+                // Remove after 3 seconds
                 setTimeout(() => {
                     toast.classList.add('translate-x-full');
                     setTimeout(() => toast.remove(), 300);
@@ -761,25 +289,40 @@
             }
 
             function scrollToCard(cardId) {
+                // First check if the card exists in current newsletters
                 const cardExists = allNewsletters.some(item => item.id === cardId);
                 
                 if (!cardExists) {
-                    showToast('Boletín no encontrado en el año actual', 'error');
-                    return;
+                    // Try to find the card in other years
+                    const yearSelector = document.getElementById('year-selector');
+                    if (yearSelector) {
+                        const years = Array.from(yearSelector.options).map(option => option.value);
+                        // For now, we'll just show a message. In a real app, you might want to load other years.
+                        showToast('Boletín no encontrado en el año actual', 'error');
+                        return;
+                    }
                 }
 
-                document.getElementById('search-input').value = '';
-                document.getElementById('month-filter').value = '';
-                document.getElementById('week-filter').value = '';
+                // Clear filters to ensure the card is visible
+                const searchInput = document.getElementById('search-input');
+                const monthFilter = document.getElementById('month-filter');
+                const weekFilter = document.getElementById('week-filter');
+                
+                if (searchInput) searchInput.value = '';
+                if (monthFilter) monthFilter.value = '';
+                if (weekFilter) weekFilter.value = '';
                 activeKeywords = [];
                 
+                // Re-render to ensure the card is visible
                 applyFilters();
                 
+                // Wait for render to complete, then scroll
                 setTimeout(() => {
                     const targetCard = document.querySelector(`[data-id="${cardId}"]`);
                     if (targetCard) {
                         const card = targetCard.closest('.card');
                         if (card) {
+                            // Store reference to highlighted card globally
                             window.highlightedCard = card;
                             
                             card.scrollIntoView({ 
@@ -787,8 +330,10 @@
                                 block: 'center' 
                             });
                             
+                            // Add highlight effect
                             card.classList.add('card-highlighted');
                             
+                            // Remove highlight after 5 seconds or when modal opens
                             setTimeout(() => {
                                 if (card.classList.contains('card-highlighted')) {
                                     card.classList.remove('card-highlighted');
@@ -810,6 +355,7 @@
                 return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             };
 
+            // Audio management functions
             function pauseCurrentAudio() {
                 if (currentAudio && !currentAudio.paused) {
                     currentAudio.pause();
@@ -817,7 +363,7 @@
             }
 
             function setCurrentAudio(audioElement) {
-                pauseCurrentAudio();
+                pauseCurrentAudio(); // Pause any existing audio
                 currentAudio = audioElement;
             }
 
@@ -828,10 +374,14 @@
                 const audioHTML = `
                     <audio id="${audioId}" controls class="${controlsClass}" preload="metadata">
                         <source src="${src}" type="audio/mpeg">
+                        <source src="${src}" type="audio/mp4">
+                        <source src="${src}" type="audio/wav">
+                        <source src="${src}" type="audio/ogg">
                         Tu navegador no soporta el elemento de audio.
                     </audio>
                 `;
                 
+                // We'll attach the event listener after the element is added to DOM
                 setTimeout(() => {
                     const audioElement = document.getElementById(audioId);
                     if (audioElement) {
@@ -853,12 +403,15 @@
                     
                     populateYearSelector();
                     
-                    const selectedYear = document.getElementById('year-selector').value;
+                    const yearSelector = document.getElementById('year-selector');
+                    const selectedYear = yearSelector ? yearSelector.value : null;
                     if (selectedYear) {
                         await loadAndProcessData(selectedYear);
                         
+                        // Check if there's a specific card to navigate to
                         const targetCardId = getCardIdFromURL();
                         if (targetCardId) {
+                            // Wait a bit more for cards to render, then scroll to target
                             setTimeout(() => {
                                 scrollToCard(targetCardId);
                             }, 1000);
@@ -892,14 +445,19 @@
                 const newsletterGrid = document.getElementById('newsletter-grid');
                 const noResults = document.getElementById('no-results');
                 
+                // Clean up any highlighted card reference
                 window.highlightedCard = null;
+                
+                // Pause any currently playing audio when changing data
                 pauseCurrentAudio();
                 
                 showLoader(true);
-                newsletterGrid.innerHTML = '';
-                newsletterGrid.classList.remove('loaded');
-                noResults.classList.add('hidden');
-                expandedCards.clear();
+                if (newsletterGrid) {
+                    newsletterGrid.innerHTML = '';
+                    newsletterGrid.classList.remove('loaded');
+                }
+                if (noResults) noResults.classList.add('hidden');
+                expandedCards.clear(); // Reset expanded cards when loading new data
                 
                 const csvUrl = yearUrls[year];
                 if (!csvUrl) {
@@ -969,32 +527,24 @@
                     }
                 }
 
-                const headers = rows[0].map(h => h.trim());
                 return rows.slice(1).map(values => {
-                    const item = {};
-                    headers.forEach((header, index) => {
-                        item[header] = values[index] ? values[index].trim() : '';
-                    });
-                    
-                    // Specific processing for certain fields
-                    if (item.id) {
-                        item.dateInfo = parseIdToDateInfo(item.id);
-                    }
-                    if (item.palabras_clave) {
-                        item.keywords = item.palabras_clave.split(',').map(kw => kw.trim()).filter(Boolean);
-                    } else {
-                        item.keywords = [];
-                    }
+                    if (values.length < 9) return null;
 
-                    // Rename fields to match existing logic if necessary
-                    item.summary = item.resumen || '';
-                    item.body = item.cuerpo_principal_md || '';
-                    item.faq = item.seccion_faq || '';
-                    item.link = item.enlace_podcast_youtube || '';
-                    item.title = item.titulo_boletin || 'Sin título';
+                    const keywordsRaw = values.slice(8)
+                        .flatMap(kwCell => kwCell.split(','))
+                        .map(kw => kw.trim())
+                        .filter(kw => kw);
 
-
-                    return item;
+                    return {
+                        id: values[1].trim(),
+                        dateInfo: parseIdToDateInfo(values[1].trim()),
+                        title: values[3].trim(),
+                        summary: values[4].trim(),
+                        body: values[5].trim(),
+                        link: values[6].trim(),
+                        faq: values[7].trim(),
+                        keywords: keywordsRaw
+                    };
                 }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
             }
 
@@ -1004,6 +554,7 @@
                 
                 if (!newsletterGrid || !noResults) return;
                 
+                // Fade out grid for smooth transition
                 newsletterGrid.classList.remove('loaded');
                 
                 setTimeout(() => {
@@ -1017,7 +568,7 @@
                     newsletters.forEach((item, index) => {
                         const card = document.createElement('div');
                         card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
-                        card.style.animationDelay = `${index * 0.05}s`;
+                        card.style.animationDelay = `${index * 0.05}s`; // Stagger animation
                         
                         const mediaEmbedHTML = generateMediaEmbed(item.link);
                         const isExpanded = expandedCards.has(item.id);
@@ -1074,10 +625,11 @@
                         newsletterGrid.appendChild(card);
                     });
                     
+                    // Fade in grid after cards are added
                     requestAnimationFrame(() => {
                         newsletterGrid.classList.add('loaded');
                     });
-                }, 150);
+                }, 150); // Small delay for smooth transition
             }
             
             function populateFilterOptions(newsletters) {
@@ -1097,6 +649,7 @@
                     months.add(date.getMonth());
                     weeks.add(getWeekNumber(date));
                     
+                    // Get the year from the newsletter data
                     if (!currentYear) {
                         currentYear = date.getFullYear();
                     }
@@ -1105,6 +658,7 @@
                 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
                 monthFilter.innerHTML = '<option value="">Todos los meses</option>' + [...months].sort((a,b) => a-b).map(m => `<option value="${m}">${monthNames[m]}</option>`).join('');
                 
+                // Use the current year or fall back to current date year
                 const yearForWeeks = currentYear || new Date().getFullYear();
                 weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">${formatWeekDisplay(w, yearForWeeks)}</option>`).join('');
             }
@@ -1130,12 +684,9 @@
                         
                         const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
 
-                        // MODIFIED: Search now includes body and faq content
                         const searchMatch = normalizedSearchTerm === '' ||
                             normalizeText(item.title).includes(normalizedSearchTerm) ||
                             normalizeText(item.summary).includes(normalizedSearchTerm) ||
-                            normalizeText(item.body).includes(normalizedSearchTerm) ||
-                            normalizeText(item.faq).includes(normalizedSearchTerm) ||
                             item.keywords.some(kw => normalizeText(kw).includes(normalizedSearchTerm));
 
                         return monthMatch && weekMatch && keywordMatch && searchMatch;
@@ -1148,7 +699,11 @@
             }
             
             function toggleKeywordFilter(keyword) {
-                document.getElementById('search-input').value = '';
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
                 const keywordIndex = activeKeywords.indexOf(keyword);
 
                 if (keywordIndex > -1) {
@@ -1162,33 +717,40 @@
             
             function expandCardKeywords(cardId) {
                 expandedCards.add(cardId);
-                applyFilters();
+                applyFilters(); // Re-render to show expanded keywords
             }
             
             function collapseCardKeywords(cardId) {
                 expandedCards.delete(cardId);
-                applyFilters();
+                applyFilters(); // Re-render to show collapsed keywords
             }
             
             function processMarkdownContent(content) {
                 if (!content) return '';
                 
+                // First, let's protect existing markdown links by temporarily replacing them
                 const linkPlaceholders = new Map();
                 let placeholderCounter = 0;
                 
+                // Find and replace existing markdown links with placeholders
                 let processed = content.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
                     if (!url || url.trim() === '' || url === 'undefined') {
-                        return text;
+                        return text; // Just return the text if no valid URL
                     }
                     const placeholder = `__LINK_PLACEHOLDER_${placeholderCounter++}__`;
                     linkPlaceholders.set(placeholder, `[${text}](${url})`);
                     return placeholder;
                 });
                 
-                processed = processed.replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
-                    return `[${match}](${match})`;
-                });
+                // Now fix other issues
+                processed = processed
+                    // Fix links that might have undefined in them (these are already handled above)
+                    // Convert plain URLs to markdown links (now safe since existing links are protected)
+                    .replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
+                        return `[${match}](${match})`;
+                    });
                 
+                // Restore the original markdown links
                 linkPlaceholders.forEach((originalLink, placeholder) => {
                     processed = processed.replace(placeholder, originalLink);
                 });
@@ -1197,12 +759,15 @@
             }
 
             function processExternalLinks(htmlContent) {
+                // Create a temporary div to parse HTML
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = htmlContent;
                 
+                // Find all links
                 const links = tempDiv.querySelectorAll('a[href]');
                 links.forEach(link => {
                     const href = link.getAttribute('href');
+                    // Check if it's an external link (starts with http/https and is not an anchor)
                     if (href && (href.startsWith('http://') || href.startsWith('https://')) && !href.startsWith('#')) {
                         link.setAttribute('target', '_blank');
                         link.setAttribute('rel', 'noopener noreferrer');
@@ -1218,7 +783,7 @@
                 
                 const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
                 if (headings.length === 0) {
-                    return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos.</p>', content: htmlContent };
+                    return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>', content: htmlContent };
                 }
                 
                 let tocHtml = '<nav class="space-y-2">';
@@ -1227,9 +792,11 @@
                     const text = heading.textContent.trim();
                     const id = `heading-${index}`;
                     
+                    // Add ID to the heading
                     heading.id = id;
                     
-                    const indent = (level - 1) * 0.75;
+                    // Calculate indentation based on heading level
+                    const indent = (level - 1) * 0.75; // 0.75rem per level
                     
                     tocHtml += `
                         <a href="#${id}" 
@@ -1249,41 +816,53 @@
                 const item = allNewsletters.find(n => n.id === id);
                 if (!item) return;
                 
+                // Remove highlight from any highlighted card when opening modal
                 if (window.highlightedCard) {
                     window.highlightedCard.classList.remove('card-highlighted');
                     window.highlightedCard = null;
                 }
                 
+                // Update URL and copy to clipboard
                 updateURLWithCard(id);
+                
+                // Pause any currently playing audio when opening a new modal
                 pauseCurrentAudio();
                 
                 const modal = document.getElementById('modal');
                 if (!modal) return;
                 
+                // Set title and date using getElementById to avoid variable reference errors
                 const titleElement = document.getElementById('modal-title');
                 const dateElement = document.getElementById('modal-date');
                 const bodyElement = document.getElementById('modal-body-content');
                 const faqDesktopElement = document.getElementById('modal-faq-content');
+                const faqMobileElement = document.getElementById('modal-faq-mobile');
                 const videoElement = document.getElementById('modal-video-container');
                 
-                [bodyElement, faqDesktopElement, videoElement].forEach(el => {
+                // First, fade out content for smooth loading
+                [bodyElement, faqDesktopElement, faqMobileElement, videoElement].forEach(el => {
                     if (el) el.style.opacity = '0';
                 });
                 
                 if (titleElement) titleElement.textContent = item.title;
                 if (dateElement) dateElement.textContent = item.dateInfo.displayDate;
                 
+                // Show modal with transition
                 modal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
                 
+                // Force reflow to ensure hidden class is removed before adding flex
                 modal.offsetHeight;
                 
+                // Add flex class for transition
                 requestAnimationFrame(() => {
                     modal.classList.add('flex');
                 });
                 
+                // Reset reading mode
                 modal.classList.remove('reading-mode');
                 
+                // Configure marked.js options
                 marked.setOptions({
                     breaks: true,
                     gfm: true,
@@ -1291,24 +870,30 @@
                     mangle: false
                 });
 
+                // Store the current item for TOC generation
                 window.currentNewsletterItem = item;
 
+                // Load content with delay for smooth transition
                 setTimeout(() => {
+                    // Set content
                     if (bodyElement) {
                         const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
                         let htmlContent = marked.parse(processedBody);
                         htmlContent = processExternalLinks(htmlContent);
                         
+                        // Generate TOC and get content with IDs
                         const tocData = generateTableOfContents(htmlContent);
-                        htmlContent = tocData.content;
+                        htmlContent = tocData.content; // Use the content with IDs added
                         
                         bodyElement.innerHTML = htmlContent;
                         bodyElement.style.opacity = '1';
                         bodyElement.classList.add('content-fade-in');
                         
+                        // Store TOC
                         window.currentTOC = tocData.toc;
                     }
                     
+                    // Set FAQ (both desktop sidebar and mobile)
                     const processedFaq = processMarkdownContent(item.faq || '*No hay preguntas frecuentes.*');
                     let faqContent = marked.parse(processedFaq);
                     faqContent = processExternalLinks(faqContent);
@@ -1318,6 +903,7 @@
                         faqDesktopElement.classList.add('content-fade-in');
                     }
                     
+                    // Set mobile section (initially FAQ)
                     const mobileSectionContent = document.getElementById('mobile-section-content');
                     const mobileSectionTitle = document.getElementById('mobile-section-title');
                     if (mobileSectionContent) {
@@ -1329,53 +915,71 @@
                         mobileSectionTitle.textContent = 'Preguntas Frecuentes';
                     }
                     
+                    // Set media
                     if (videoElement) {
                         videoElement.innerHTML = generateMediaEmbed(item.link, true);
                         videoElement.style.opacity = '1';
                         videoElement.classList.add('content-fade-in');
                     }
-                }, 200);
+                }, 200); // Slightly longer delay for smoother feel
             }
 
             function closeModal() {
                 const modal = document.getElementById('modal');
                 if (!modal) return;
                 
+                // Clear URL parameter when closing modal
                 const url = new URL(window.location);
                 url.searchParams.delete('boletin');
                 window.history.replaceState({}, '', url);
                 
+                // Start transition by removing flex class
                 modal.classList.remove('flex');
                 
+                // After transition, hide completely and restore scroll
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     document.body.style.overflow = 'auto';
+                    // Clean up global variables
                     window.currentNewsletterItem = null;
                     window.currentTOC = null;
-                }, 400);
+                }, 400); // Match the enhanced CSS transition duration
             }
 
             function scrollToHeading(headingId) {
                 const heading = document.getElementById(headingId);
                 if (heading) {
+                    // Get the scrollable container (the modal content area)
                     const scrollContainer = heading.closest('.overflow-y-auto');
                     
                     if (scrollContainer) {
+                        // Calculate offset for fixed header and add extra padding
                         const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
                         const elementPosition = heading.offsetTop;
-                        const offsetPosition = elementPosition - headerHeight - 40;
+                        const offsetPosition = elementPosition - headerHeight - 40; // Extra 40px padding for better readability
                         
                         scrollContainer.scrollTo({
-                            top: Math.max(0, offsetPosition),
+                            top: Math.max(0, offsetPosition), // Ensure we don't scroll to negative values
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Fallback - scroll to start position with offset
+                        const headerHeight = 100; // Conservative estimate
+                        const targetPosition = heading.offsetTop - headerHeight;
+                        
+                        window.scrollTo({
+                            top: Math.max(0, targetPosition),
                             behavior: 'smooth'
                         });
                     }
                     
+                    // Optional: Add a subtle highlight to the heading that was navigated to
                     heading.style.background = 'linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 50%)';
                     heading.style.paddingLeft = '1rem';
                     heading.style.marginLeft = '-1rem';
                     heading.style.transition = 'all 0.3s ease';
                     
+                    // Remove highlight after 2 seconds
                     setTimeout(() => {
                         heading.style.background = '';
                         heading.style.paddingLeft = '';
@@ -1391,10 +995,21 @@
                 const mobileSectionTitle = document.getElementById('mobile-section-title');
                 
                 if (window.currentTOC) {
-                    if (faqDesktopElement) faqDesktopElement.innerHTML = window.currentTOC;
-                    if (sidebarTitle) sidebarTitle.textContent = 'Índice de Contenido';
-                    if (mobileSectionContent) mobileSectionContent.innerHTML = window.currentTOC;
-                    if (mobileSectionTitle) mobileSectionTitle.textContent = 'Índice de Contenido';
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = window.currentTOC;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Índice de Contenido';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = window.currentTOC;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Índice de Contenido';
+                    }
                 }
             }
 
@@ -1409,10 +1024,21 @@
                     let faqContent = marked.parse(processedFaq);
                     faqContent = processExternalLinks(faqContent);
                     
-                    if (faqDesktopElement) faqDesktopElement.innerHTML = faqContent;
-                    if (sidebarTitle) sidebarTitle.textContent = 'Preguntas Frecuentes';
-                    if (mobileSectionContent) mobileSectionContent.innerHTML = faqContent;
-                    if (mobileSectionTitle) mobileSectionTitle.textContent = 'Preguntas Frecuentes';
+                    // Update desktop sidebar
+                    if (faqDesktopElement) {
+                        faqDesktopElement.innerHTML = faqContent;
+                    }
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = 'Preguntas Frecuentes';
+                    }
+                    
+                    // Update mobile section
+                    if (mobileSectionContent) {
+                        mobileSectionContent.innerHTML = faqContent;
+                    }
+                    if (mobileSectionTitle) {
+                        mobileSectionTitle.textContent = 'Preguntas Frecuentes';
+                    }
                 }
             }
 
@@ -1438,6 +1064,7 @@
                 const parts = idString.split('_');
                 if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString, weekNumber: null };
                 
+                // Extract week number from the first part (format: AÑO-SEMANA)
                 const yearWeekPart = parts[0];
                 const yearWeekMatch = yearWeekPart.match(/^(\d{4})-(\d+)$/);
                 const weekNumber = yearWeekMatch ? parseInt(yearWeekMatch[2], 10) : null;
@@ -1478,14 +1105,20 @@
             }
             
             function getWeekDates(weekNumber, year) {
+                // Get the first day of the year
                 const firstDay = new Date(year, 0, 1);
+                
+                // Calculate days to add to get to the start of the specified week
+                // Week 1 is the first week with 4+ days in the new year
                 const firstThursday = new Date(year, 0, 1 + (4 - firstDay.getDay() + 7) % 7);
                 const firstWeekStart = new Date(firstThursday);
-                firstWeekStart.setDate(firstThursday.getDate() - 3);
+                firstWeekStart.setDate(firstThursday.getDate() - 3); // Go back to Monday
                 
+                // Calculate the start of the target week
                 const weekStart = new Date(firstWeekStart);
                 weekStart.setDate(firstWeekStart.getDate() + (weekNumber - 1) * 7);
                 
+                // Calculate the end of the week (Sunday)
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekStart.getDate() + 6);
                 
@@ -1502,8 +1135,10 @@
                 
                 let dateRange;
                 if (start.getMonth() === end.getMonth()) {
+                    // Same month
                     dateRange = `del ${startDay} al ${endDay} de ${startMonth}`;
                 } else {
+                    // Different months
                     dateRange = `del ${startDay} de ${startMonth} al ${endDay} de ${endMonth}`;
                 }
                 
@@ -1522,15 +1157,39 @@
                 
                 const youtubeId = getYouTubeID(link);
                 if (youtubeId) {
-                    const iframeSrc = `https://www.youtube.com/embed/${youtubeId}`;
                     if (fullSize) {
-                        return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="${iframeSrc}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+                        return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
                     } else {
-                        return `<iframe width="100%" height="95" class="rounded-md" src="${iframeSrc}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                        return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                     }
                 }
                 
-                if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i) || link.includes('drive.google.com') || link.includes('soundcloud.com') || link.includes('anchor.fm')) {
+                // Check for audio files (MP3, WAV, OGG, M4A)
+                if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                    const audioElement = createAudioPlayer(link, fullSize);
+                    if (fullSize) {
+                        return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
+                    } else {
+                        return audioElement;
+                    }
+                }
+
+                // Check for direct links to audio files in common hosting services
+                if (link.includes('drive.google.com') && link.includes('export=download')) {
+                    const audioElement = createAudioPlayer(link, fullSize);
+                    if (fullSize) {
+                        return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
+                    } else {
+                        return audioElement;
+                    }
+                }
+
+                // Check for other audio hosting services
+                if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)/i) || 
+                    link.includes('soundcloud.com') ||
+                    link.includes('anchor.fm') ||
+                    link.includes('podcast') ||
+                    link.toLowerCase().includes('audio')) {
                     const audioElement = createAudioPlayer(link, fullSize);
                     if (fullSize) {
                         return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
@@ -1547,69 +1206,115 @@
                     return ivooxElement;
                 }
 
-                return '';
+                return ''; // Return empty if no known media type is found
             }
 
             // Event Listeners
             document.body.addEventListener('click', function(event) {
-                const target = event.target;
-                if (target.classList.contains('tag')) {
+                if (event.target.classList.contains('tag')) {
                     event.stopPropagation();
-                    toggleKeywordFilter(target.textContent);
-                } else if (target.classList.contains('read-more-btn')) {
-                    openModal(target.dataset.id);
-                } else if (target.classList.contains('expand-keywords')) {
+                    toggleKeywordFilter(event.target.textContent);
+                }
+                if (event.target.classList.contains('read-more-btn')) {
+                    openModal(event.target.dataset.id);
+                }
+                if (event.target.classList.contains('expand-keywords')) {
                     event.stopPropagation();
-                    expandCardKeywords(target.dataset.cardId);
-                } else if (target.classList.contains('collapse-keywords')) {
+                    expandCardKeywords(event.target.dataset.cardId);
+                }
+                if (event.target.classList.contains('collapse-keywords')) {
                     event.stopPropagation();
-                    collapseCardKeywords(target.dataset.cardId);
-                } else if (target.dataset.headingId) {
+                    collapseCardKeywords(event.target.dataset.cardId);
+                }
+                // Handle TOC link clicks
+                if (event.target.dataset.headingId) {
                     event.preventDefault();
-                    scrollToHeading(target.dataset.headingId);
-                } else if (target.closest('.share-btn')) {
+                    const headingId = event.target.dataset.headingId;
+                    scrollToHeading(headingId);
+                }
+                // Handle share button clicks
+                if (event.target.closest('.share-btn')) {
                     event.stopPropagation();
-                    const shareBtn = target.closest('.share-btn');
+                    const shareBtn = event.target.closest('.share-btn');
                     const cardId = shareBtn.dataset.shareId;
                     if (cardId) {
                         const url = new URL(window.location);
                         url.searchParams.set('boletin', cardId);
-                        copyToClipboard(url.toString(), '🔗 Enlace directo copiado');
+                        copyToClipboard(url.toString(), '🔗 Enlace directo copiado al portapapeles');
                     }
                 }
             });
             
-            document.getElementById('year-selector').addEventListener('change', (e) => loadAndProcessData(e.target.value));
-            document.getElementById('search-input').addEventListener('input', applyFilters);
-            document.getElementById('month-filter').addEventListener('change', applyFilters);
-            document.getElementById('week-filter').addEventListener('change', applyFilters);
-            document.getElementById('modal-close').addEventListener('click', closeModal);
-            document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+            // Get elements for event listeners
+            const yearSelector = document.getElementById('year-selector');
+            const searchInput = document.getElementById('search-input');
+            const monthFilter = document.getElementById('month-filter');
+            const weekFilter = document.getElementById('week-filter');
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const navContent = document.getElementById('nav-content');
+            const navFaq = document.getElementById('nav-faq');
+            const toggleReadingModeBtn = document.getElementById('toggle-reading-mode');
+            const modalShare = document.getElementById('modal-share');
+            
+            if (yearSelector) yearSelector.addEventListener('change', (e) => loadAndProcessData(e.target.value));
+            if (searchInput) searchInput.addEventListener('input', applyFilters);
+            if (monthFilter) monthFilter.addEventListener('change', applyFilters);
+            if (weekFilter) weekFilter.addEventListener('change', applyFilters);
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
             document.addEventListener('keydown', (e) => { 
-                if (e.key === "Escape" && !document.getElementById('modal').classList.contains('hidden')) closeModal(); 
+                if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
             });
             
-            document.getElementById('modal-share').addEventListener('click', () => {
-                copyToClipboard(window.location.href, '🔗 Enlace del boletín copiado');
+            // Modal share button
+            if (modalShare) modalShare.addEventListener('click', () => {
+                const currentUrl = window.location.href;
+                copyToClipboard(currentUrl, '🔗 Enlace del boletín copiado al portapapeles');
             });
             
-            document.getElementById('nav-content').addEventListener('click', () => {
+            // New modal navigation
+            if (navContent) navContent.addEventListener('click', () => {
+                // Show table of contents in sidebar
                 showTableOfContents();
-                const scrollTarget = window.innerWidth >= 1024 ? document.getElementById('modal-body-content') : document.getElementById('mobile-content-section');
-                if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-
-            document.getElementById('nav-faq').addEventListener('click', () => {
-                showFAQ();
-                if (window.innerWidth < 1024) {
-                    const scrollTarget = document.getElementById('mobile-content-section');
-                    if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Scroll to content on mobile/when sidebar not visible
+                const isDesktop = window.innerWidth >= 1024;
+                if (isDesktop) {
+                    const contentElement = document.getElementById('modal-body-content');
+                    if (contentElement) {
+                        contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } else {
+                    // On mobile, scroll to the mobile content section (now showing TOC)
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             });
-            
-            document.getElementById('toggle-reading-mode').addEventListener('click', () => {
-                document.getElementById('modal').classList.toggle('reading-mode');
+            if (navFaq) navFaq.addEventListener('click', () => {
+                // Show FAQ in sidebar
+                showFAQ();
+                
+                // In mobile, scroll to mobile section
+                const isDesktop = window.innerWidth >= 1024;
+                if (!isDesktop) {
+                    const element = document.getElementById('mobile-content-section');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
             });
+            if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
+                const modal = document.getElementById('modal');
+                if (modal) modal.classList.toggle('reading-mode');
+            });
+            
+            // Make scrollToHeading globally available
+            window.scrollToHeading = scrollToHeading;
             
             // --- Start the application ---
             init();
