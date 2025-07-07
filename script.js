@@ -393,10 +393,11 @@ function renderCards(newsletters) {
                 ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
                 : '';
             
-            // ============== CAMBIO PRINCIPAL APLICADO AQUÍ ==============
-            // Se usa marked.parse() para convertir el Markdown de la cita a HTML.
-            // El resultado se inserta en un <div> con las clases `prose` para que se apliquen los estilos.
-            const htmlCita = marked.parse(item.cita || '');
+            // ============== CAMBIO APLICADO SEGÚN TUS INSTRUCCIONES ==============
+            // 1. Limpia y des-escapa el markdown
+            const cleanedCita = processMarkdownContent(item.cita || '');
+            // 2. Convierte a HTML
+            const htmlCita = marked.parse(cleanedCita);
 
             card.innerHTML = `
                 <div class="p-5 flex-grow flex flex-col">
@@ -414,7 +415,7 @@ function renderCards(newsletters) {
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
                     
-                    <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none dark:prose-invert">
+                    <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose-custom prose-sm max-w-none dark:prose-invert">
                         ${htmlCita}
                     </div>
 
