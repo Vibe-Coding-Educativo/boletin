@@ -447,7 +447,7 @@ function renderCards(newsletters) {
                 ` : ''}
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
                     <button data-id="${item.id}" class="read-more-btn w-full text-center font-bold text-amber-600 hover:text-amber-500 dark:text-amber-500 dark:hover:text-amber-400 transition-colors">
-                        Leer boletín &rarr;
+                        Leer boletín →
                     </button>
                 </div>
             `;
@@ -560,12 +560,15 @@ function collapseCardKeywords(cardId) {
 function processMarkdownContent(content) {
     if (!content) return '';
     
-    // First, let's protect existing markdown links by temporarily replacing them
+    // First, unescape common markdown characters that might be incorrectly escaped.
+    let unescapedContent = content.replace(/\\\*/g, '*').replace(/\\\_/g, '_').replace(/\\\[/g, '[').replace(/\\\]/g, ']');
+
+    // Then, protect existing markdown links by temporarily replacing them
     const linkPlaceholders = new Map();
     let placeholderCounter = 0;
     
     // Find and replace existing markdown links with placeholders
-    let processed = content.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
+    let processed = unescapedContent.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
         if (!url || url.trim() === '' || url === 'undefined') {
             return text; // Just return the text if no valid URL
         }
@@ -979,7 +982,7 @@ function formatWeekDisplay(weekNumber, year) {
 
 function getYouTubeID(url) {
     if(!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp = /^.*(http:\/\/googleusercontent.com\/youtube.com\/0\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 }
@@ -990,9 +993,9 @@ function generateMediaEmbed(link, fullSize = false) {
     const youtubeId = getYouTubeID(link);
     if (youtubeId) {
         if (fullSize) {
-            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="http:\/\/googleusercontent.com\/youtube.com\/1\${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
         } else {
-            return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            return `<iframe width="100%" height="95" class="rounded-md" src="http:\/\/googleusercontent.com\/youtube.com\/1\${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
     }
     
@@ -1033,8 +1036,8 @@ function generateMediaEmbed(link, fullSize = false) {
     if (link.includes('ivoox.com')) {
         const embedLink = link.replace('_sq_f1', '_ep_1');
         const ivooxElement = fullSize
-            ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
-            : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
+            ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="\${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
+            : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="\${embedLink}"></iframe>`;
         return ivooxElement;
     }
 
