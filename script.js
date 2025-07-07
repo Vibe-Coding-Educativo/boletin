@@ -392,8 +392,7 @@ function renderCards(newsletters) {
             const collapseButton = isExpanded && item.keywords.length > 3
                 ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
                 : '';
-            
-            // ============== CAMBIO APLICADO SEGÚN TUS INSTRUCCIONES ==============
+
             // 1. Limpia y des-escapa el markdown
             const cleanedCita = processMarkdownContent(item.cita || '');
             // 2. Convierte a HTML
