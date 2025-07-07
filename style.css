@@ -379,6 +379,7 @@ audio:hover {
 
 /* MODIFIED: Card highlight effect for direct links */
 .card-highlighted {
+    overflow: visible;
     position: relative;
     animation: highlight-pulse 3s ease-in-out infinite;
     border: 2px solid #fbbf24 !important; /* amber-400 */
