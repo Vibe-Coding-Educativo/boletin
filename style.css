@@ -474,3 +474,10 @@ audio:hover {
     opacity: 1;
     transform: translateY(-1px);
 }
+
+
+/* Ocultar etiqueta “Boletín seleccionado” sin afectar borde ni resplandor */
+.card-highlighted::after,
+.dark .card-highlighted::after {
+    content: none !important;
+}
