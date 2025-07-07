@@ -433,7 +433,9 @@ function renderCards(newsletters) {
                         </button>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
-                    <p class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">${item.summary}</p>
+                    <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none">
+    ${marked.parse(item.summary || '')}
+</div>
                     <div class="flex flex-wrap gap-1 mt-2">
                         ${keywordTags}
                         ${expandButton}
