@@ -369,11 +369,6 @@ audio:hover {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
-@keyframes glow-border {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
-
 /* Share button in cards */
 .share-btn {
     transition: all 0.2s ease-in-out;
@@ -384,31 +379,35 @@ audio:hover {
     transform: translateY(-1px);
 }
 
-/* =============================================================== */
-/* ESTILO DEFINITIVO PARA LA TARJETA DESTACADA                     */
-/* =============================================================== */
-
-.card-highlighted {
+/* --- halo naranja permanente + pulso --- */
+.card-highlighted{
     position: relative;
     z-index: 10;
 
-    /* Animación de pulso con borde y sombra naranja */
-    animation: highlight-pulse 2.5s ease-in-out infinite;
-    border: 2px solid #fbbf24; /* Color base del borde */
+    /* borde fijo */
+    border: 2px solid #fbbf24;
+
+    /* halo fijo, visible incluso antes de la animación */
+    box-shadow:
+        0 0 25px rgba(251, 191, 36, 0.35),
+        0 8px 24px rgba(251, 191, 36, 0.25);
+
+    /* animación de latido */
+    animation: highlight-pulse 3s ease-in-out infinite;
 }
 
-/* Animación de pulso para la tarjeta destacada */
-@keyframes highlight-pulse {
-    0% {
-        transform: scale(1.0);
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+/* pulso: amplía brillo y escala suavemente */
+@keyframes highlight-pulse{
+    0%,100%{
+        transform: scale(1.01);
+        box-shadow:
+            0 0 25px rgba(251, 191, 36, 0.35),
+            0 8px 24px rgba(251, 191, 36, 0.25);
     }
-    50% {
-        transform: scale(1.02); /* Escala ligeramente la tarjeta */
-        box-shadow: 0 0 35px rgba(251, 191, 36, 0.5); /* Aumenta el resplandor */
-    }
-    100% {
-        transform: scale(1.0);
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    50%{
+        transform: scale(1.03);
+        box-shadow:
+            0 0 35px rgba(251, 191, 36, 0.55),
+            0 15px 35px rgba(251, 191, 36, 0.35);
     }
 }
