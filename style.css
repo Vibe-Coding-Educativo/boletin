@@ -369,37 +369,9 @@ audio:hover {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
-/* Highlight pulse animation */
-@keyframes highlight-pulse {
-    0% {
-        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2);
-        transform: scale(1.02);
-    }
-    50% {
-        box-shadow: 0 0 35px rgba(251, 191, 36, 0.5), 0 15px 40px rgba(251, 191, 36, 0.3);
-        transform: scale(1.03);
-    }
-    100% {
-        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2);
-        transform: scale(1.02);
-    }
-}
-
 @keyframes glow-border {
     0%, 100% { opacity: 0.6; }
     50% { opacity: 1; }
-}
-
-/* Badge animation (show and stay) */
-@keyframes badge-appear {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -100%) translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -100%) translateY(0);
-    }
 }
 
 /* Dark theme adjustments for highlighted card */
@@ -418,32 +390,78 @@ audio:hover {
     transform: translateY(-1px);
 }
 
-/* --- ajuste definitivo banda “boletin seleccionado” --- */
-.card-highlighted {
-    position: relative;
-    animation: highlight-pulse 3s ease-in-out infinite;
-    border: 2px solid #fbbf24;
-    box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2);
-    transform: scale(1.02);
-    z-index: 10;
-    margin-top: 1.75rem;   /* deja hueco para la banda */
-    overflow: visible;     /* evita que se recorte */
+/* =============================================================== */
+/* AJUSTE DEFINITIVO PARA LA BANDA DEL BOLETÍN SELECCIONADO        */
+/* =============================================================== */
+
+/* 1. Nos aseguramos de que el contenedor de las tarjetas no recorte
+      los elementos que se salgan de sus límites. */
+#newsletter-grid {
+    overflow: visible;
 }
 
+/* 2. Aplicamos todos los estilos a la tarjeta destacada, incluyendo
+      el margen superior para dejar espacio a la banda. */
+.card-highlighted {
+    position: relative;
+    overflow: visible; /* La propia tarjeta tampoco debe recortar. */
+    margin-top: 2rem;  /* Espacio superior para la banda. */
+    z-index: 10;
+
+    /* Estilos de la animación de pulso y la sombra. */
+    animation: highlight-pulse 2.5s ease-in-out infinite;
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), 0 10px 30px rgba(251, 191, 36, 0.3);
+    transform: scale(1.02);
+}
+
+/* 3. Definimos la banda y su posicionamiento exacto. */
 .card-highlighted::after {
+    /* Contenido y apariencia. */
     content: '🔻 boletin seleccionado';
-    position: absolute;
-    left: 50%;
     background: #f59e0b;
     color: white;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    animation: badge-appear 0.4s ease-out forwards;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    /* Posicionamiento y animación. */
+    position: absolute;
+    left: 50%;
     top: 0;
-    transform: translate(-50%, -100%);
-    z-index: 50;
+    z-index: 50; /* La ponemos por delante de todo. */
+    transform: translate(-50%, -110%); /* La cuelga justo encima del borde. */
+    animation: badge-appear-final 0.5s ease-out forwards;
+}
+
+/* 4. Corregimos la animación de aparición para que coincida
+      con el nuevo posicionamiento. */
+@keyframes badge-appear-final {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -110%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -110%) translateY(0);
+    }
+}
+
+/* Animación de pulso para la tarjeta destacada */
+@keyframes highlight-pulse {
+    0% {
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2);
+        transform: scale(1.02);
+    }
+    50% {
+        box-shadow: 0 0 35px rgba(251, 191, 36, 0.5), 0 15px 40px rgba(251, 191, 36, 0.3);
+        transform: scale(1.03);
+    }
+    100% {
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2);
+        transform: scale(1.02);
+    }
 }
