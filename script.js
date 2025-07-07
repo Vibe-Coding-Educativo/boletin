@@ -356,25 +356,30 @@ function parseCSV(text) {
         }
     }
 
+    // ========= CORRECCIÓN INICIA AQUÍ =========
     return rows.slice(1).map(values => {
-        if (values.length < 9) return null;
+        // Aseguramos que la fila tiene suficientes columnas para evitar errores
+        if (values.length < 9) return null; 
 
-        const keywordsRaw = values.slice(8)
+        const keywordsRaw = values.slice(9) // Las palabras clave ahora empiezan en la columna 10 (índice 9)
             .flatMap(kwCell => kwCell.split(','))
             .map(kw => kw.trim())
             .filter(kw => kw);
 
+        // Mapeo corregido de las columnas del CSV para incluir 'cita'
         return {
             id: values[1].trim(),
             dateInfo: parseIdToDateInfo(values[1].trim()),
             title: values[3].trim(),
-            summary: values[4].trim(),
-            body: values[5].trim(),
-            link: values[6].trim(),
-            faq: values[7].trim(),
+            cita: values[4].trim(),      // NUEVO: Leemos la columna de la cita
+            summary: values[5].trim(),   // Corregido: el resumen está ahora en la columna 6
+            body: values[6].trim(),      // Corregido: el cuerpo está ahora en la columna 7
+            link: values[7].trim(),      // Corregido: el enlace está ahora en la columna 8
+            faq: values[8].trim(),       // Corregido: la FAQ está en la columna 9
             keywords: keywordsRaw
         };
     }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
+    // ========= CORRECCIÓN TERMINA AQUÍ =========
 }
 
 function renderCards(newsletters) {
@@ -433,9 +438,10 @@ function renderCards(newsletters) {
                         </button>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
-                    <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none">
-    ${marked.parse(item.summary || '')}
-</div>
+                    
+                    <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none dark:prose-invert">
+                        ${marked.parse(item.cita || item.summary || '')}
+                    </div>
                     <div class="flex flex-wrap gap-1 mt-2">
                         ${keywordTags}
                         ${expandButton}
@@ -515,9 +521,10 @@ function applyFilters() {
             
             const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
 
-            // MODIFICADO: La búsqueda ahora incluye el cuerpo y las FAQ
+            // La búsqueda ahora incluye cita, cuerpo y FAQ
             const searchMatch = normalizedSearchTerm === '' ||
                 normalizeText(item.title).includes(normalizedSearchTerm) ||
+                normalizeText(item.cita).includes(normalizedSearchTerm) ||
                 normalizeText(item.summary).includes(normalizedSearchTerm) ||
                 normalizeText(item.body).includes(normalizedSearchTerm) ||
                 normalizeText(item.faq).includes(normalizedSearchTerm) ||
@@ -984,7 +991,7 @@ function formatWeekDisplay(weekNumber, year) {
 
 function getYouTubeID(url) {
     if(!url) return null;
-    const regExp = /^.*(http:\/\/googleusercontent.com\/youtube.com\/0\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp = /^.*(https?:\/\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 }
@@ -995,9 +1002,9 @@ function generateMediaEmbed(link, fullSize = false) {
     const youtubeId = getYouTubeID(link);
     if (youtubeId) {
         if (fullSize) {
-            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="http:\/\/googleusercontent.com\/youtube.com\/1\${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
         } else {
-            return `<iframe width="100%" height="95" class="rounded-md" src="http:\/\/googleusercontent.com\/youtube.com\/1\${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
     }
     
@@ -1038,8 +1045,8 @@ function generateMediaEmbed(link, fullSize = false) {
     if (link.includes('ivoox.com')) {
         const embedLink = link.replace('_sq_f1', '_ep_1');
         const ivooxElement = fullSize
-            ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="\${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
-            : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="\${embedLink}"></iframe>`;
+            ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
+            : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
         return ivooxElement;
     }
 
