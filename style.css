@@ -179,6 +179,7 @@ html {
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
     overflow: visible;
+    gap: 2rem; /* o bien añade “gap-y-8” en la clase Tailwind */
 }
 #newsletter-grid.loaded {
     opacity: 1;
@@ -369,15 +370,17 @@ audio:hover {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
-/* Card highlight effect for direct links */
-.card-highlighted {
+/* --- parche banda “boletin seleccionado” --- */
+/* 1 · damos aire por encima de la tarjeta */
+.card-highlighted{
     position: relative;
     animation: highlight-pulse 3s ease-in-out infinite;
     border: 2px solid #fbbf24 !important; /* amber-400 */
     box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), 0 10px 30px rgba(251, 191, 36, 0.2) !important;
     transform: scale(1.02) !important;
     z-index: 10;
-    padding-top: 1.75rem; /* ≈28 px */
+    margin-top: 1.75rem;   /* ≈28 px: espacio para la banda */
+    padding-top: 0;        /* volvemos al padding normal */
 }
 
 .card-highlighted::before {
@@ -391,13 +394,11 @@ audio:hover {
     z-index: -1;
 }
 
-/* Card highlight label */
+/* 2 · colgamos la banda justo encima del borde */
 .card-highlighted::after {
     content: '🔻 boletin seleccionado';
     position: absolute;
-    top: -22px; /* antes estaba en –15 px */
     left: 50%;
-    transform: translateX(-50%);
     background: #f59e0b; /* amber-500 */
     color: white;
     padding: 4px 12px;
@@ -407,6 +408,9 @@ audio:hover {
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     animation: badge-appear 0.4s ease-out forwards;
+    top: 0;                          /* arranca en el borde superior */
+    transform: translate(-50%, -100%); /* se desplaza toda su altura */
+    z-index: 20;                     /* se asegura de quedar por delante */
 }
 
 /* Highlight pulse animation */
@@ -434,13 +438,14 @@ audio:hover {
 @keyframes badge-appear {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-10px);
+        transform: translate(-50%, -100%) translateY(-10px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translate(-50%, -100%) translateY(0);
     }
 }
+
 
 /* Dark theme adjustments for highlighted card */
 .dark .card-highlighted::after {
