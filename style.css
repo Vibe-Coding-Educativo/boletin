@@ -21,6 +21,12 @@ body {
 .dark .tag.active {
     color: #ffffff;
 }
+.loader {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 /* Modal transitions */
 #modal {
