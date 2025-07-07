@@ -481,3 +481,14 @@ audio:hover {
 .dark .card-highlighted::after {
     content: none !important;
 }
+
+
+/* Suavizar el fondo interior de la tarjeta resaltada sin alterar el borde ni el resplandor */
+.card-highlighted {
+    background-color: #fff7e6 !important; /* Amber-100, tono suave */
+}
+
+/* Ajuste correspondiente para el tema oscuro */
+.dark .card-highlighted {
+    background-color: #3b2f14 !important; /* Suave ámbar oscuro */
+}
