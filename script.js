@@ -392,6 +392,11 @@ function renderCards(newsletters) {
             const collapseButton = isExpanded && item.keywords.length > 3
                 ? `<span class="collapse-keywords text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 cursor-pointer font-medium" data-card-id="${item.id}">mostrar menos</span>`
                 : '';
+            
+            // ============== CAMBIO PRINCIPAL APLICADO AQUÍ ==============
+            // Se usa marked.parse() para convertir el Markdown de la cita a HTML.
+            // El resultado se inserta en un <div> con las clases `prose` para que se apliquen los estilos.
+            const htmlCita = marked.parse(item.cita || '');
 
             card.innerHTML = `
                 <div class="p-5 flex-grow flex flex-col">
@@ -410,7 +415,7 @@ function renderCards(newsletters) {
                     <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">${item.title}</h3>
                     
                     <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none dark:prose-invert">
-                        ${marked.parse(item.cita || item.summary || '')}
+                        ${htmlCita}
                     </div>
 
                     <div class="flex flex-wrap gap-1 mt-2">
