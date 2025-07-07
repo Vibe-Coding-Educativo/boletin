@@ -4,6 +4,7 @@ body {
     font-family: 'Inter', sans-serif;
 }
 .card {
+    scroll-margin-top: 6rem; /* Añadido para corregir el solapamiento del scroll */
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 .card:hover {
