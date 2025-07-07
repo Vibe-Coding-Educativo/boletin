@@ -61,7 +61,6 @@ function updateURLWithCard(cardId) {
     const url = new URL(window.location);
     url.searchParams.set('boletin', cardId);
     window.history.replaceState({}, '', url);
-    // No longer auto-copy to clipboard
 }
 
 function getCardIdFromURL() {
@@ -74,7 +73,6 @@ function copyToClipboard(text, message = 'Copiado al portapapeles') {
         showToast(message);
     }).catch(err => {
         console.error('Error al copiar al portapapeles:', err);
-        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = text;
         document.body.appendChild(textArea);
@@ -90,7 +88,6 @@ function copyToClipboard(text, message = 'Copiado al portapapeles') {
 }
 
 function showToast(message, type = 'success') {
-    // Remove any existing toast
     const existingToast = document.getElementById('toast');
     if (existingToast) {
         existingToast.remove();
@@ -107,10 +104,8 @@ function showToast(message, type = 'success') {
     
     document.body.appendChild(toast);
     
-    // Animate in
     setTimeout(() => toast.classList.add('translate-x-0'), 10);
     
-    // Remove after 3 seconds
     setTimeout(() => {
         toast.classList.add('translate-x-full');
         setTimeout(() => toast.remove(), 300);
@@ -118,21 +113,13 @@ function showToast(message, type = 'success') {
 }
 
 function scrollToCard(cardId) {
-    // First check if the card exists in current newsletters
     const cardExists = allNewsletters.some(item => item.id === cardId);
     
     if (!cardExists) {
-        // Try to find the card in other years
-        const yearSelector = document.getElementById('year-selector');
-        if (yearSelector) {
-            const years = Array.from(yearSelector.options).map(option => option.value);
-            // For now, we'll just show a message. In a real app, you might want to load other years.
-            showToast('Boletín no encontrado en el año actual', 'error');
-            return;
-        }
+        showToast('Boletín no encontrado en el año actual', 'error');
+        return;
     }
 
-    // Clear filters to ensure the card is visible
     const searchInput = document.getElementById('search-input');
     const monthFilter = document.getElementById('month-filter');
     const weekFilter = document.getElementById('week-filter');
@@ -142,27 +129,18 @@ function scrollToCard(cardId) {
     if (weekFilter) weekFilter.value = '';
     activeKeywords = [];
     
-    // Re-render to ensure the card is visible
     applyFilters();
     
-    // Wait for render to complete, then scroll
     setTimeout(() => {
         const targetCard = document.querySelector(`[data-id="${cardId}"]`);
         if (targetCard) {
             const card = targetCard.closest('.card');
             if (card) {
-                // Store reference to highlighted card globally
                 window.highlightedCard = card;
                 
-                card.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-                
-                // Add highlight effect
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 card.classList.add('card-highlighted');
                 
-                // Remove highlight after 5 seconds or when modal opens
                 setTimeout(() => {
                     if (card.classList.contains('card-highlighted')) {
                         card.classList.remove('card-highlighted');
@@ -192,7 +170,7 @@ function pauseCurrentAudio() {
 }
 
 function setCurrentAudio(audioElement) {
-    pauseCurrentAudio(); // Pause any existing audio
+    pauseCurrentAudio();
     currentAudio = audioElement;
 }
 
@@ -210,7 +188,6 @@ function createAudioPlayer(src, isFullSize = false) {
         </audio>
     `;
     
-    // We'll attach the event listener after the element is added to DOM
     setTimeout(() => {
         const audioElement = document.getElementById(audioId);
         if (audioElement) {
@@ -233,18 +210,23 @@ async function init() {
         populateYearSelector();
         
         const yearSelector = document.getElementById('year-selector');
-        const selectedYear = yearSelector ? yearSelector.value : null;
-        if (selectedYear) {
+        const selectedYear = yearSelector ? yearSelector.value : new Date().getFullYear().toString();
+        if (yearUrls[selectedYear]) {
+            yearSelector.value = selectedYear;
             await loadAndProcessData(selectedYear);
-            
-            // Check if there's a specific card to navigate to
-            const targetCardId = getCardIdFromURL();
-            if (targetCardId) {
-                // Wait a bit more for cards to render, then scroll to target
-                setTimeout(() => {
-                    scrollToCard(targetCardId);
-                }, 1000);
+        } else {
+            const latestYear = Object.keys(yearUrls).sort((a,b) => b-a)[0];
+            if (latestYear) {
+                yearSelector.value = latestYear;
+                await loadAndProcessData(latestYear);
             }
+        }
+        
+        const targetCardId = getCardIdFromURL();
+        if (targetCardId) {
+            setTimeout(() => {
+                scrollToCard(targetCardId);
+            }, 1000);
         }
     } catch (error) {
         console.error("Error initializing app:", error);
@@ -263,30 +245,22 @@ function populateYearSelector() {
     }
     
     yearSelector.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join('');
-    
-    const currentYear = new Date().getFullYear().toString();
-    if (years.includes(currentYear)) {
-        yearSelector.value = currentYear;
-    }
 }
 
 async function loadAndProcessData(year) {
     const newsletterGrid = document.getElementById('newsletter-grid');
     const noResults = document.getElementById('no-results');
     
-    // Clean up any highlighted card reference
     window.highlightedCard = null;
-    
-    // Pause any currently playing audio when changing data
     pauseCurrentAudio();
-    
     showLoader(true);
+
     if (newsletterGrid) {
         newsletterGrid.innerHTML = '';
         newsletterGrid.classList.remove('loaded');
     }
     if (noResults) noResults.classList.add('hidden');
-    expandedCards.clear(); // Reset expanded cards when loading new data
+    expandedCards.clear();
     
     const csvUrl = yearUrls[year];
     if (!csvUrl) {
@@ -356,30 +330,27 @@ function parseCSV(text) {
         }
     }
 
-    // ========= CORRECCIÓN INICIA AQUÍ =========
+    // Mapeo de columnas corregido para coincidir con el CSV que incluye "cita"
     return rows.slice(1).map(values => {
-        // Aseguramos que la fila tiene suficientes columnas para evitar errores
-        if (values.length < 9) return null; 
+        if (values.length < 9) return null;
 
-        const keywordsRaw = values.slice(9) // Las palabras clave ahora empiezan en la columna 10 (índice 9)
+        const keywordsRaw = values.slice(9)
             .flatMap(kwCell => kwCell.split(','))
             .map(kw => kw.trim())
             .filter(kw => kw);
 
-        // Mapeo corregido de las columnas del CSV para incluir 'cita'
         return {
             id: values[1].trim(),
             dateInfo: parseIdToDateInfo(values[1].trim()),
             title: values[3].trim(),
-            cita: values[4].trim(),      // NUEVO: Leemos la columna de la cita
-            summary: values[5].trim(),   // Corregido: el resumen está ahora en la columna 6
-            body: values[6].trim(),      // Corregido: el cuerpo está ahora en la columna 7
-            link: values[7].trim(),      // Corregido: el enlace está ahora en la columna 8
-            faq: values[8].trim(),       // Corregido: la FAQ está en la columna 9
+            cita: values[4].trim(),      // Columna de la cita
+            summary: values[5].trim(),   // Columna del resumen
+            body: values[6].trim(),      // Columna del cuerpo
+            link: values[7].trim(),      // Columna del enlace
+            faq: values[8].trim(),       // Columna de FAQ
             keywords: keywordsRaw
         };
     }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
-    // ========= CORRECCIÓN TERMINA AQUÍ =========
 }
 
 function renderCards(newsletters) {
@@ -388,7 +359,6 @@ function renderCards(newsletters) {
     
     if (!newsletterGrid || !noResults) return;
     
-    // Fade out grid for smooth transition
     newsletterGrid.classList.remove('loaded');
     
     setTimeout(() => {
@@ -402,14 +372,14 @@ function renderCards(newsletters) {
         newsletters.forEach((item, index) => {
             const card = document.createElement('div');
             card.className = 'card bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col border border-slate-200 dark:border-slate-700';
-            card.style.animationDelay = `${index * 0.05}s`; // Stagger animation
+            card.style.animationDelay = `${index * 0.05}s`;
             
             const mediaEmbedHTML = generateMediaEmbed(item.link);
             const isExpanded = expandedCards.has(item.id);
             const keywordsToShow = isExpanded ? item.keywords : item.keywords.slice(0, 3);
             
             const keywordTags = keywordsToShow.map(kw => {
-                const isActive = activeKeywords.includes(kw);
+                const isActive = activeKeywords.includes(normalizeText(kw));
                 const activeClass = isActive ? 'bg-amber-500 text-slate-800 dark:text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900 dark:hover:text-amber-300';
                 return `<span class="tag text-xs px-2 py-0.5 rounded ${activeClass}">${kw}</span>`;
             }).join('');
@@ -442,6 +412,7 @@ function renderCards(newsletters) {
                     <div class="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow prose prose-sm max-w-none dark:prose-invert">
                         ${marked.parse(item.cita || item.summary || '')}
                     </div>
+
                     <div class="flex flex-wrap gap-1 mt-2">
                         ${keywordTags}
                         ${expandButton}
@@ -462,11 +433,10 @@ function renderCards(newsletters) {
             newsletterGrid.appendChild(card);
         });
         
-        // Fade in grid after cards are added
         requestAnimationFrame(() => {
             newsletterGrid.classList.add('loaded');
         });
-    }, 150); // Small delay for smooth transition
+    }, 150);
 }
 
 function populateFilterOptions(newsletters) {
@@ -486,7 +456,6 @@ function populateFilterOptions(newsletters) {
         months.add(date.getMonth());
         weeks.add(getWeekNumber(date));
         
-        // Get the year from the newsletter data
         if (!currentYear) {
             currentYear = date.getFullYear();
         }
@@ -495,7 +464,6 @@ function populateFilterOptions(newsletters) {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     monthFilter.innerHTML = '<option value="">Todos los meses</option>' + [...months].sort((a,b) => a-b).map(m => `<option value="${m}">${monthNames[m]}</option>`).join('');
     
-    // Use the current year or fall back to current date year
     const yearForWeeks = currentYear || new Date().getFullYear();
     weekFilter.innerHTML = '<option value="">Todas las semanas</option>' + [...weeks].sort((a,b) => a-b).map(w => `<option value="${w}">${formatWeekDisplay(w, yearForWeeks)}</option>`).join('');
 }
@@ -519,9 +487,8 @@ function applyFilters() {
             const monthMatch = selectedMonth === '' || date.getMonth().toString() === selectedMonth;
             const weekMatch = selectedWeek === '' || getWeekNumber(date).toString() === selectedWeek;
             
-            const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === normalizeText(ak)));
+            const keywordMatch = activeKeywords.length === 0 || activeKeywords.every(ak => item.keywords.some(ik => normalizeText(ik) === ak));
 
-            // La búsqueda ahora incluye cita, cuerpo y FAQ
             const searchMatch = normalizedSearchTerm === '' ||
                 normalizeText(item.title).includes(normalizedSearchTerm) ||
                 normalizeText(item.cita).includes(normalizedSearchTerm) ||
@@ -545,12 +512,13 @@ function toggleKeywordFilter(keyword) {
         searchInput.value = '';
     }
     
-    const keywordIndex = activeKeywords.indexOf(keyword);
+    const normalizedKeyword = normalizeText(keyword);
+    const keywordIndex = activeKeywords.indexOf(normalizedKeyword);
 
     if (keywordIndex > -1) {
         activeKeywords.splice(keywordIndex, 1);
     } else {
-        activeKeywords.push(keyword);
+        activeKeywords.push(normalizedKeyword);
     }
     
     applyFilters();
@@ -558,43 +526,35 @@ function toggleKeywordFilter(keyword) {
 
 function expandCardKeywords(cardId) {
     expandedCards.add(cardId);
-    applyFilters(); // Re-render to show expanded keywords
+    applyFilters();
 }
 
 function collapseCardKeywords(cardId) {
     expandedCards.delete(cardId);
-    applyFilters(); // Re-render to show collapsed keywords
+    applyFilters();
 }
 
 function processMarkdownContent(content) {
     if (!content) return '';
     
-    // First, unescape common markdown characters that might be incorrectly escaped.
     let unescapedContent = content.replace(/\\\*/g, '*').replace(/\\\_/g, '_').replace(/\\\[/g, '[').replace(/\\\]/g, ']');
 
-    // Then, protect existing markdown links by temporarily replacing them
     const linkPlaceholders = new Map();
     let placeholderCounter = 0;
     
-    // Find and replace existing markdown links with placeholders
     let processed = unescapedContent.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, text, url) => {
         if (!url || url.trim() === '' || url === 'undefined') {
-            return text; // Just return the text if no valid URL
+            return text;
         }
         const placeholder = `__LINK_PLACEHOLDER_${placeholderCounter++}__`;
         linkPlaceholders.set(placeholder, `[${text}](${url})`);
         return placeholder;
     });
     
-    // Now fix other issues
-    processed = processed
-        // Fix links that might have undefined in them (these are already handled above)
-        // Convert plain URLs to markdown links (now safe since existing links are protected)
-        .replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
-            return `[${match}](${match})`;
-        });
+    processed = processed.replace(/https?:\/\/[^\s\)\]]+/g, (match) => {
+        return `[${match}](${match})`;
+    });
     
-    // Restore the original markdown links
     linkPlaceholders.forEach((originalLink, placeholder) => {
         processed = processed.replace(placeholder, originalLink);
     });
@@ -603,15 +563,12 @@ function processMarkdownContent(content) {
 }
 
 function processExternalLinks(htmlContent) {
-    // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Find all links
     const links = tempDiv.querySelectorAll('a[href]');
     links.forEach(link => {
         const href = link.getAttribute('href');
-        // Check if it's an external link (starts with http/https and is not an anchor)
         if (href && (href.startsWith('http://') || href.startsWith('https://')) && !href.startsWith('#')) {
             link.setAttribute('target', '_blank');
             link.setAttribute('rel', 'noopener noreferrer');
@@ -627,7 +584,7 @@ function generateTableOfContents(htmlContent) {
     
     const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
     if (headings.length === 0) {
-        return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos en el contenido.</p>', content: htmlContent };
+        return { toc: '<p class="text-slate-500 dark:text-slate-400 italic">No se encontraron títulos.</p>', content: htmlContent };
     }
     
     let tocHtml = '<nav class="space-y-2">';
@@ -636,11 +593,9 @@ function generateTableOfContents(htmlContent) {
         const text = heading.textContent.trim();
         const id = `heading-${index}`;
         
-        // Add ID to the heading
         heading.id = id;
         
-        // Calculate indentation based on heading level
-        const indent = (level - 1) * 0.75; // 0.75rem per level
+        const indent = (level - 1) * 0.75;
         
         tocHtml += `
             <a href="#${id}" 
@@ -660,22 +615,17 @@ function openModal(id) {
     const item = allNewsletters.find(n => n.id === id);
     if (!item) return;
     
-    // Remove highlight from any highlighted card when opening modal
     if (window.highlightedCard) {
         window.highlightedCard.classList.remove('card-highlighted');
         window.highlightedCard = null;
     }
     
-    // Update URL and copy to clipboard
     updateURLWithCard(id);
-    
-    // Pause any currently playing audio when opening a new modal
     pauseCurrentAudio();
     
     const modal = document.getElementById('modal');
     if (!modal) return;
     
-    // Set title and date using getElementById to avoid variable reference errors
     const titleElement = document.getElementById('modal-title');
     const dateElement = document.getElementById('modal-date');
     const bodyElement = document.getElementById('modal-body-content');
@@ -683,7 +633,6 @@ function openModal(id) {
     const faqMobileElement = document.getElementById('modal-faq-mobile');
     const videoElement = document.getElementById('modal-video-container');
     
-    // First, fade out content for smooth loading
     [bodyElement, faqDesktopElement, faqMobileElement, videoElement].forEach(el => {
         if (el) el.style.opacity = '0';
     });
@@ -691,22 +640,15 @@ function openModal(id) {
     if (titleElement) titleElement.textContent = item.title;
     if (dateElement) dateElement.textContent = item.dateInfo.displayDate;
     
-    // Show modal with transition
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     
-    // Force reflow to ensure hidden class is removed before adding flex
-    modal.offsetHeight;
-    
-    // Add flex class for transition
     requestAnimationFrame(() => {
         modal.classList.add('flex');
     });
     
-    // Reset reading mode
     modal.classList.remove('reading-mode');
     
-    // Configure marked.js options
     marked.setOptions({
         breaks: true,
         gfm: true,
@@ -714,30 +656,22 @@ function openModal(id) {
         mangle: false
     });
 
-    // Store the current item for TOC generation
     window.currentNewsletterItem = item;
 
-    // Load content with delay for smooth transition
     setTimeout(() => {
-        // Set content
         if (bodyElement) {
             const processedBody = processMarkdownContent(item.body || '*No hay contenido disponible.*');
             let htmlContent = marked.parse(processedBody);
             htmlContent = processExternalLinks(htmlContent);
             
-            // Generate TOC and get content with IDs
             const tocData = generateTableOfContents(htmlContent);
-            htmlContent = tocData.content; // Use the content with IDs added
-            
-            bodyElement.innerHTML = htmlContent;
+            bodyElement.innerHTML = tocData.content;
             bodyElement.style.opacity = '1';
             bodyElement.classList.add('content-fade-in');
             
-            // Store TOC
             window.currentTOC = tocData.toc;
         }
         
-        // Set FAQ (both desktop sidebar and mobile)
         const processedFaq = processMarkdownContent(item.faq || '*No hay preguntas frecuentes.*');
         let faqContent = marked.parse(processedFaq);
         faqContent = processExternalLinks(faqContent);
@@ -747,7 +681,6 @@ function openModal(id) {
             faqDesktopElement.classList.add('content-fade-in');
         }
         
-        // Set mobile section (initially FAQ)
         const mobileSectionContent = document.getElementById('mobile-section-content');
         const mobileSectionTitle = document.getElementById('mobile-section-title');
         if (mobileSectionContent) {
@@ -759,71 +692,53 @@ function openModal(id) {
             mobileSectionTitle.textContent = 'Preguntas Frecuentes';
         }
         
-        // Set media
         if (videoElement) {
             videoElement.innerHTML = generateMediaEmbed(item.link, true);
             videoElement.style.opacity = '1';
             videoElement.classList.add('content-fade-in');
         }
-    }, 200); // Slightly longer delay for smoother feel
+    }, 200);
 }
 
 function closeModal() {
     const modal = document.getElementById('modal');
     if (!modal) return;
     
-    // Clear URL parameter when closing modal
     const url = new URL(window.location);
     url.searchParams.delete('boletin');
     window.history.replaceState({}, '', url);
     
-    // Start transition by removing flex class
     modal.classList.remove('flex');
     
-    // After transition, hide completely and restore scroll
     setTimeout(() => {
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
-        // Clean up global variables
         window.currentNewsletterItem = null;
         window.currentTOC = null;
-    }, 400); // Match the enhanced CSS transition duration
+    }, 400);
 }
 
 function scrollToHeading(headingId) {
     const heading = document.getElementById(headingId);
     if (heading) {
-        // Get the scrollable container (the modal content area)
         const scrollContainer = heading.closest('.overflow-y-auto');
         
         if (scrollContainer) {
-            // Calculate offset for fixed header and add extra padding
             const headerHeight = document.querySelector('#modal .sticky').offsetHeight || 80;
             const elementPosition = heading.offsetTop;
-            const offsetPosition = elementPosition - headerHeight - 40; // Extra 40px padding for better readability
+            const offsetPosition = elementPosition - headerHeight - 40;
             
             scrollContainer.scrollTo({
-                top: Math.max(0, offsetPosition), // Ensure we don't scroll to negative values
-                behavior: 'smooth'
-            });
-        } else {
-            // Fallback - scroll to start position with offset
-            const headerHeight = 100; // Conservative estimate
-            const targetPosition = heading.offsetTop - headerHeight;
-            
-            window.scrollTo({
-                top: Math.max(0, targetPosition),
+                top: Math.max(0, offsetPosition),
                 behavior: 'smooth'
             });
         }
         
-        // Optional: Add a subtle highlight to the heading that was navigated to
         heading.style.background = 'linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 50%)';
         heading.style.paddingLeft = '1rem';
         heading.style.marginLeft = '-1rem';
         heading.style.transition = 'all 0.3s ease';
         
-        // Remove highlight after 2 seconds
         setTimeout(() => {
             heading.style.background = '';
             heading.style.paddingLeft = '';
@@ -839,21 +754,10 @@ function showTableOfContents() {
     const mobileSectionTitle = document.getElementById('mobile-section-title');
     
     if (window.currentTOC) {
-        // Update desktop sidebar
-        if (faqDesktopElement) {
-            faqDesktopElement.innerHTML = window.currentTOC;
-        }
-        if (sidebarTitle) {
-            sidebarTitle.textContent = 'Índice de Contenido';
-        }
-        
-        // Update mobile section
-        if (mobileSectionContent) {
-            mobileSectionContent.innerHTML = window.currentTOC;
-        }
-        if (mobileSectionTitle) {
-            mobileSectionTitle.textContent = 'Índice de Contenido';
-        }
+        if (faqDesktopElement) faqDesktopElement.innerHTML = window.currentTOC;
+        if (sidebarTitle) sidebarTitle.textContent = 'Índice de Contenido';
+        if (mobileSectionContent) mobileSectionContent.innerHTML = window.currentTOC;
+        if (mobileSectionTitle) mobileSectionTitle.textContent = 'Índice de Contenido';
     }
 }
 
@@ -868,21 +772,10 @@ function showFAQ() {
         let faqContent = marked.parse(processedFaq);
         faqContent = processExternalLinks(faqContent);
         
-        // Update desktop sidebar
-        if (faqDesktopElement) {
-            faqDesktopElement.innerHTML = faqContent;
-        }
-        if (sidebarTitle) {
-            sidebarTitle.textContent = 'Preguntas Frecuentes';
-        }
-        
-        // Update mobile section
-        if (mobileSectionContent) {
-            mobileSectionContent.innerHTML = faqContent;
-        }
-        if (mobileSectionTitle) {
-            mobileSectionTitle.textContent = 'Preguntas Frecuentes';
-        }
+        if (faqDesktopElement) faqDesktopElement.innerHTML = faqContent;
+        if (sidebarTitle) sidebarTitle.textContent = 'Preguntas Frecuentes';
+        if (mobileSectionContent) mobileSectionContent.innerHTML = faqContent;
+        if (mobileSectionTitle) mobileSectionTitle.textContent = 'Preguntas Frecuentes';
     }
 }
 
@@ -908,7 +801,6 @@ function parseIdToDateInfo(idString) {
     const parts = idString.split('_');
     if (parts.length < 3) return { startDate: null, endDate: null, displayDate: idString, weekNumber: null };
     
-    // Extract week number from the first part (format: AÑO-SEMANA)
     const yearWeekPart = parts[0];
     const yearWeekMatch = yearWeekPart.match(/^(\d{4})-(\d+)$/);
     const weekNumber = yearWeekMatch ? parseInt(yearWeekMatch[2], 10) : null;
@@ -926,9 +818,7 @@ function parseIdToDateInfo(idString) {
     const endMonth = endDate.toLocaleDateString('es-ES', { month: 'long' });
     const year = endDate.getFullYear();
 
-    let displayDate;
     const weekText = weekNumber ? `Semana ${weekNumber}` : '';
-
     let dateRangeText;
     if (startMonth === endMonth) {
         dateRangeText = `del ${startDay} al ${endDay} de ${endMonth} de ${year}`;
@@ -936,7 +826,7 @@ function parseIdToDateInfo(idString) {
         dateRangeText = `del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${year}`;
     }
     
-    displayDate = weekText ? `${weekText}: ${dateRangeText}` : dateRangeText;
+    const displayDate = weekText ? `${weekText}: ${dateRangeText}` : dateRangeText;
     
     return { startDate, endDate, displayDate, weekNumber };
 }
@@ -949,20 +839,14 @@ function getWeekNumber(d) {
 }
 
 function getWeekDates(weekNumber, year) {
-    // Get the first day of the year
     const firstDay = new Date(year, 0, 1);
-    
-    // Calculate days to add to get to the start of the specified week
-    // Week 1 is the first week with 4+ days in the new year
     const firstThursday = new Date(year, 0, 1 + (4 - firstDay.getDay() + 7) % 7);
     const firstWeekStart = new Date(firstThursday);
-    firstWeekStart.setDate(firstThursday.getDate() - 3); // Go back to Monday
+    firstWeekStart.setDate(firstThursday.getDate() - 3);
     
-    // Calculate the start of the target week
     const weekStart = new Date(firstWeekStart);
     weekStart.setDate(firstWeekStart.getDate() + (weekNumber - 1) * 7);
     
-    // Calculate the end of the week (Sunday)
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
     
@@ -979,10 +863,8 @@ function formatWeekDisplay(weekNumber, year) {
     
     let dateRange;
     if (start.getMonth() === end.getMonth()) {
-        // Same month
         dateRange = `del ${startDay} al ${endDay} de ${startMonth}`;
     } else {
-        // Different months
         dateRange = `del ${startDay} de ${startMonth} al ${endDay} de ${endMonth}`;
     }
     
@@ -1001,95 +883,69 @@ function generateMediaEmbed(link, fullSize = false) {
     
     const youtubeId = getYouTubeID(link);
     if (youtubeId) {
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}`;
         if (fullSize) {
-            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="${embedUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
         } else {
-            return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            return `<iframe width="100%" height="95" class="rounded-md" src="${embedUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
     }
     
-    // Check for audio files (MP3, WAV, OGG, M4A)
-    if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+    if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i) || link.includes('drive.google.com') || link.includes('soundcloud.com') || link.includes('anchor.fm')) {
         const audioElement = createAudioPlayer(link, fullSize);
-        if (fullSize) {
-            return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
-        } else {
-            return audioElement;
-        }
-    }
-
-    // Check for direct links to audio files in common hosting services
-    if (link.includes('drive.google.com') && link.includes('export=download')) {
-        const audioElement = createAudioPlayer(link, fullSize);
-        if (fullSize) {
-            return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
-        } else {
-            return audioElement;
-        }
-    }
-
-    // Check for other audio hosting services
-    if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)/i) || 
-        link.includes('soundcloud.com') ||
-        link.includes('anchor.fm') ||
-        link.includes('podcast') ||
-        link.toLowerCase().includes('audio')) {
-        const audioElement = createAudioPlayer(link, fullSize);
-        if (fullSize) {
-            return `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>`;
-        } else {
-            return audioElement;
-        }
+        return fullSize ? `<div class="w-full max-w-2xl mx-auto mb-8">${audioElement}</div>` : audioElement;
     }
 
     if (link.includes('ivoox.com')) {
-        const embedLink = link.replace('_sq_f1', '_ep_1');
-        const ivooxElement = fullSize
-            ? `<div class="w-full max-w-2xl mx-auto mb-8"><iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="rounded-lg shadow-lg"></iframe></div>`
-            : `<iframe width="100%" height="200" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}"></iframe>`;
-        return ivooxElement;
+        const embedLink = link.replace('_sq_f1', '_ep_1').replace('www.ivoox.com', 'www.ivoox.com/player');
+        const ivooxElement = `<iframe width="100%" height="${fullSize ? 200 : 95}" scrolling="no" frameborder="0" allowfullscreen="" src="${embedLink}" class="${fullSize ? 'rounded-lg shadow-lg' : ''}"></iframe>`;
+        return fullSize ? `<div class="w-full max-w-2xl mx-auto mb-8">${ivooxElement}</div>` : ivooxElement;
     }
 
-    return ''; // Return empty if no known media type is found
+    return '';
 }
 
-// Event Listeners
+// --- Event Listeners ---
+document.addEventListener('DOMContentLoaded', init);
+
 document.body.addEventListener('click', function(event) {
-    if (event.target.classList.contains('tag')) {
+    const target = event.target;
+    
+    if (target.classList.contains('tag')) {
         event.stopPropagation();
-        toggleKeywordFilter(event.target.textContent);
+        toggleKeywordFilter(target.textContent);
     }
-    if (event.target.classList.contains('read-more-btn')) {
-        openModal(event.target.dataset.id);
+    const readMoreBtn = target.closest('.read-more-btn');
+    if (readMoreBtn) {
+        openModal(readMoreBtn.dataset.id);
     }
-    if (event.target.classList.contains('expand-keywords')) {
+    const expandKeywordsBtn = target.closest('.expand-keywords');
+    if (expandKeywordsBtn) {
         event.stopPropagation();
-        expandCardKeywords(event.target.dataset.cardId);
+        expandCardKeywords(expandKeywordsBtn.dataset.cardId);
     }
-    if (event.target.classList.contains('collapse-keywords')) {
+    const collapseKeywordsBtn = target.closest('.collapse-keywords');
+    if (collapseKeywordsBtn) {
         event.stopPropagation();
-        collapseCardKeywords(event.target.dataset.cardId);
+        collapseCardKeywords(collapseKeywordsBtn.dataset.cardId);
     }
-    // Handle TOC link clicks
-    if (event.target.dataset.headingId) {
+    const tocLink = target.closest('a[data-heading-id]');
+    if (tocLink) {
         event.preventDefault();
-        const headingId = event.target.dataset.headingId;
-        scrollToHeading(headingId);
+        scrollToHeading(tocLink.dataset.headingId);
     }
-    // Handle share button clicks
-    if (event.target.closest('.share-btn')) {
+    const shareBtn = target.closest('.share-btn');
+    if (shareBtn) {
         event.stopPropagation();
-        const shareBtn = event.target.closest('.share-btn');
         const cardId = shareBtn.dataset.shareId;
         if (cardId) {
             const url = new URL(window.location);
             url.searchParams.set('boletin', cardId);
-            copyToClipboard(url.toString(), '🔗 Enlace directo copiado al portapapeles');
+            copyToClipboard(url.toString(), '🔗 Enlace directo copiado');
         }
     }
 });
 
-// Get elements for event listeners
 const yearSelector = document.getElementById('year-selector');
 const searchInput = document.getElementById('search-input');
 const monthFilter = document.getElementById('month-filter');
@@ -1113,52 +969,22 @@ document.addEventListener('keydown', (e) => {
     if (e.key === "Escape" && modal && !modal.classList.contains('hidden')) closeModal(); 
 });
 
-// Modal share button
 if (modalShare) modalShare.addEventListener('click', () => {
-    const currentUrl = window.location.href;
-    copyToClipboard(currentUrl, '🔗 Enlace del boletín copiado al portapapeles');
+    copyToClipboard(window.location.href, '🔗 Enlace del boletín copiado');
 });
 
-// New modal navigation
 if (navContent) navContent.addEventListener('click', () => {
-    // Show table of contents in sidebar
     showTableOfContents();
-    
-    // Scroll to content on mobile/when sidebar not visible
-    const isDesktop = window.innerWidth >= 1024;
-    if (isDesktop) {
-        const contentElement = document.getElementById('modal-body-content');
-        if (contentElement) {
-            contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    } else {
-        // On mobile, scroll to the mobile content section (now showing TOC)
-        const element = document.getElementById('mobile-content-section');
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+    if (!window.matchMedia('(min-width: 1024px)').matches) {
+        document.getElementById('mobile-content-section')?.scrollIntoView({ behavior: 'smooth' });
     }
 });
 if (navFaq) navFaq.addEventListener('click', () => {
-    // Show FAQ in sidebar
     showFAQ();
-    
-    // In mobile, scroll to mobile section
-    const isDesktop = window.innerWidth >= 1024;
-    if (!isDesktop) {
-        const element = document.getElementById('mobile-content-section');
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+    if (!window.matchMedia('(min-width: 1024px)').matches) {
+        document.getElementById('mobile-content-section')?.scrollIntoView({ behavior: 'smooth' });
     }
 });
 if (toggleReadingModeBtn) toggleReadingModeBtn.addEventListener('click', () => {
-    const modal = document.getElementById('modal');
-    if (modal) modal.classList.toggle('reading-mode');
+    modal?.classList.toggle('reading-mode');
 });
-
-// Make scrollToHeading globally available
-window.scrollToHeading = scrollToHeading;
-
-// --- Start the application ---
-init();
