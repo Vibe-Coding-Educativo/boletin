@@ -977,26 +977,44 @@ function formatWeekDisplay(weekNumber, year) {
     return `Semana ${weekNumber} (${dateRange})`;
 }
 
+/**
+ * START: CÓDIGO MODIFICADO
+ */
+
+/**
+ * Extrae el ID de un vídeo de YouTube de varios formatos de URL.
+ * @param {string} url La URL de YouTube.
+ * @returns {string|null} El ID del vídeo o null si no se encuentra.
+ */
 function getYouTubeID(url) {
     if(!url) return null;
-    const regExp = /^.*(http:\/\/googleusercontent.com\/youtube.com\/0\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+/**
+ * Genera el HTML para incrustar un vídeo de YouTube o un reproductor de audio.
+ * @param {string} link El enlace al medio.
+ * @param {boolean} fullSize True para el reproductor grande de la modal, false para la vista previa.
+ * @returns {string} El código HTML para el medio incrustado.
+ */
 function generateMediaEmbed(link, fullSize = false) {
     if (!link) return '';
     
+    // 1. Prioridad: Comprobar si es un vídeo de YouTube
     const youtubeId = getYouTubeID(link);
     if (youtubeId) {
         if (fullSize) {
-            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="http:\/\/googleusercontent.com\/youtube.com\/1{youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            // Reproductor grande y responsivo (16:9) para la ventana modal
+            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
         } else {
-            return `<iframe width="100%" height="95" class="rounded-md" src="http:\/\/googleusercontent.com\/youtube.com\/1{youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            // Reproductor pequeño para la tarjeta de vista previa
+            return `<iframe width="100%" height="95" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
     }
     
-    // Check for audio files (MP3, WAV, OGG, M4A)
+    // 2. Si no es YouTube, comprobar si es un archivo de audio (lógica existente)
     if (link.match(/\.(mp3|wav|ogg|m4a)$/i)) {
         const audioElement = createAudioPlayer(link, fullSize);
         if (fullSize) {
@@ -1006,7 +1024,6 @@ function generateMediaEmbed(link, fullSize = false) {
         }
     }
 
-    // Check for direct links to audio files in common hosting services
     if (link.includes('drive.google.com') && link.includes('export=download')) {
         const audioElement = createAudioPlayer(link, fullSize);
         if (fullSize) {
@@ -1016,7 +1033,6 @@ function generateMediaEmbed(link, fullSize = false) {
         }
     }
 
-    // Check for other audio hosting services
     if (link.match(/\.(mp3|wav|ogg|m4a|aac|flac)/i) || 
         link.includes('soundcloud.com') ||
         link.includes('anchor.fm') ||
@@ -1030,6 +1046,7 @@ function generateMediaEmbed(link, fullSize = false) {
         }
     }
 
+    // 3. Comprobar otros servicios como iVoox (lógica existente)
     if (link.includes('ivoox.com')) {
         const embedLink = link.replace('_sq_f1', '_ep_1');
         const ivooxElement = fullSize
@@ -1038,8 +1055,13 @@ function generateMediaEmbed(link, fullSize = false) {
         return ivooxElement;
     }
 
-    return ''; // Return empty if no known media type is found
+    return ''; // No se encontró ningún medio compatible
 }
+
+/**
+ * END: CÓDIGO MODIFICADO
+ */
+
 
 // Event Listeners
 document.body.addEventListener('click', function(event) {
@@ -1134,7 +1156,7 @@ if (navFaq) navFaq.addEventListener('click', () => {
     // In mobile, scroll to mobile section
     const isDesktop = window.innerWidth >= 1024;
     if (!isDesktop) {
-        const element = document.getElementById('mobile-content-section');
+        const element = document.getElementById('mobile-section-section');
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
