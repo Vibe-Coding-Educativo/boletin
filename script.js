@@ -1007,10 +1007,16 @@ function generateMediaEmbed(link, fullSize = false) {
     if (youtubeId) {
         if (fullSize) {
             // Reproductor grande y responsivo (16:9) para la ventana modal
-            return `<div class="relative w-full max-w-4xl mx-auto mb-8"><div class="relative pb-[56.25%] h-0"><iframe class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            return `<div class=\"relative w-full max-w-4xl mx-auto mb-8\"><div class=\"relative pb-[56.25%] h-0\"><iframe class=\"absolute top-0 left-0 w-full h-full rounded-lg shadow-lg\" src=\"https://www.youtube-nocookie.com/embed/${youtubeId}\" title=\"YouTube video player\" frameborder=\"0\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen sandbox=\"allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms\"></iframe></div></div>`;
         } else {
-            // Reproductor pequeño para la tarjeta de vista previa
-            return `<iframe width="100%" height="165" class="rounded-md" src="https://www.youtube.com/embed/${youtubeId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            // Vista previa ligera: miniatura estática para evitar iframes masivos en el grid
+            const thumb = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+            return `<div class=\"relative w-full rounded-md overflow-hidden shadow-md aspect-video bg-black\">
+                        <img src=\"${thumb}\" alt=\"YouTube thumbnail\" class=\"w-full h-full object-cover opacity-90\">
+                        <div class=\"absolute inset-0 grid place-items-center\">
+                            <svg width=\"56\" height=\"56\" viewBox=\"0 0 24 24\" fill=\"#fff\" style=\"opacity:0.85\"><path d=\"M8 5v14l11-7z\"/></svg>
+                        </div>
+                    </div>`;
         }
     }
     

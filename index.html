@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Boletín Vibe Coding Educativo</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS via CDN (desarrollo). Nota: ignoramos el aviso de consola. -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tailwind CSS Config -->
     <script>
-        tailwind.config = {
-            darkMode: 'class', // Habilita el modo oscuro basado en clases (ej: class="dark")
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
     
     <!-- Marked.js for Markdown rendering -->
@@ -21,6 +19,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Link to external CSS file -->
     <link rel="stylesheet" href="style.css">
