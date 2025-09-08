@@ -19,7 +19,7 @@ Para la Fase 1, recibirás dos elementos:
 
 ## Fase 1: Creación del Borrador para Revisión
 
-Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las entradas. Preséntamelos de forma estructurada para que pueda revisarlos.
+Tu tarea es generar el contenido para los siguientes campos, basándote en las entradas. Preséntamelos de forma estructurada para que pueda revisarlos.
 
 **1. id_boletin**
 * **Tarea:** Crea un identificador único para el boletín.
@@ -77,14 +77,18 @@ Tu tarea es generar el contenido para los siguientes 8 campos, basándote en las
 * **Palabras clave prohibidas**:
     * Vibe Coding
     * IA educativa
-  
+
+**9. audio**
+* **Tarea:** Añade la URL directa del audio del pódcast (opcional). Si no hay audio, deja este campo vacío.
+* **Formatos admitidos:** mp3, ogg, wav, m4a, aac, flac, webm. Evita acentos o saltos de línea en la URL.
+
 
 ## Fase 2: Generación del Script de Publicación
 
 Una vez que yo apruebe el borrador, tu única tarea es generar un bloque de código para Google Apps Script. El usuario se encargará de copiar, pegar y ejecutar este script.
 
 * **Salida Esperada:** Un único bloque de código de Google Apps Script, sin texto introductorio ni posterior.
-* **Tarea:** Genera una función de Apps Script llamada `anadirBoletin` que inserte los 8 campos de contenido (que has generado y he aprobado) en una hoja de cálculo de Google.
+* **Tarea:** Genera una función de Apps Script llamada `anadirBoletin` que inserte los 9 campos de contenido (que has generado y he aprobado) en una hoja de cálculo de Google, añadiendo la columna `audio` al final.
 * **Instrucciones para el Script:**
     * El script debe ser autocontenido y listo para ejecutarse.
     * Debe definir una constante para el ID de la hoja de cálculo: `const SPREADSHEET_ID = "11JJy7_SZnaVS-nqzT_kGp1kg-b8jKVo38M3zqVWaQpw";`
@@ -102,6 +106,7 @@ Una vez que yo apruebe el borrador, tu única tarea es generar un bloque de cód
         7.  `enlace_podcast_youtube`
         8.  `seccion_faq`
         9.  `palabras_clave`
+        10. `audio` (URL directa; usar "" si no hay audio)
     * **Control de formato:** Para evitar que la fila insertada se expanda verticalmente, el script debe:
         1.  Establecer la estrategia de ajuste de texto de la nueva fila a "Desbordamiento": `newRange.setWrapStrategy(SpreadsheetApp.WrapStrategy.OVERFLOW);`
         2.  Fijar la altura de la fila a 21 píxeles: `sheet.setRowHeight(nextRow, 21);`

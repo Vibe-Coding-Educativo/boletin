@@ -52,6 +52,20 @@ let expandedCards = new Set();
 let yearUrls = {};
 let currentAudio = null; // Global audio management
 
+// --- Audio helpers ---
+function getAudioMime(src) {
+    if (!src) return 'audio/mpeg';
+    const lower = src.split('?')[0].toLowerCase();
+    if (lower.endsWith('.mp3')) return 'audio/mpeg';
+    if (lower.endsWith('.ogg')) return 'audio/ogg';
+    if (lower.endsWith('.wav')) return 'audio/wav';
+    if (lower.endsWith('.m4a')) return 'audio/mp4';
+    if (lower.endsWith('.aac')) return 'audio/aac';
+    if (lower.endsWith('.flac')) return 'audio/flac';
+    if (lower.endsWith('.webm')) return 'audio/webm';
+    return 'audio/mpeg';
+}
+
 // --- Config URLs ---
 const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
 const CORS_PROXY = 'https://corsproxy.io/?';
@@ -200,12 +214,10 @@ function createAudioPlayer(src, isFullSize = false) {
     const audioId = `audio-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const controlsClass = isFullSize ? "w-full" : "w-full";
     
+    const mime = getAudioMime(src);
     const audioHTML = `
         <audio id="${audioId}" controls class="${controlsClass}" preload="metadata">
-            <source src="${src}" type="audio/mpeg">
-            <source src="${src}" type="audio/mp4">
-            <source src="${src}" type="audio/wav">
-            <source src="${src}" type="audio/ogg">
+            <source src="${src}" type="${mime}">
             Tu navegador no soporta el elemento de audio.
         </audio>
     `;
@@ -359,19 +371,23 @@ function parseCSV(text) {
     return rows.slice(1).map(values => {
         if (values.length < 9) return null;
 
-        const keywordsRaw = values.slice(8)
+        const hasAudio = values.length >= 10;
+        const audio = hasAudio ? (values[values.length - 1] || '').trim() : '';
+        const keywordsSliceEnd = hasAudio ? values.length - 1 : values.length;
+        const keywordsRaw = values.slice(8, keywordsSliceEnd)
             .flatMap(kwCell => kwCell.split(','))
             .map(kw => kw.trim())
             .filter(kw => kw);
 
         return {
-            id: values[1].trim(),
-            dateInfo: parseIdToDateInfo(values[1].trim()),
-            title: values[3].trim(),
-            summary: values[4].trim(),
-            body: values[5].trim(),
-            link: values[6].trim(),
-            faq: values[7].trim(),
+            id: (values[1] || '').trim(),
+            dateInfo: parseIdToDateInfo((values[1] || '').trim()),
+            title: (values[3] || '').trim(),
+            summary: (values[4] || '').trim(),
+            body: (values[5] || '').trim(),
+            link: (values[6] || '').trim(),
+            faq: (values[7] || '').trim(),
+            audio,
             keywords: keywordsRaw
         };
     }).filter(item => item && item.id).sort((a, b) => b.dateInfo.startDate - a.dateInfo.startDate);
@@ -400,6 +416,14 @@ function renderCards(newsletters) {
             card.style.animationDelay = `${index * 0.05}s`; // Stagger animation
             
             const mediaEmbedHTML = generateMediaEmbed(item.link);
+            const audioDifferent = item && item.audio && item.audio.trim() && item.audio.trim() !== (item.link || '').trim();
+            const audioPlayerHTML = audioDifferent ? createAudioPlayer(item.audio, false) : '';
+            const audioLabeledHTML = audioDifferent ? `
+                <div class="mt-3">
+                    <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">🎧 Podcast (audio)</div>
+                    ${audioPlayerHTML}
+                </div>
+            ` : '';
             const isExpanded = expandedCards.has(item.id);
             const keywordsToShow = isExpanded ? item.keywords : item.keywords.slice(0, 3);
             
@@ -440,9 +464,10 @@ function renderCards(newsletters) {
                         ${collapseButton}
                     </div>
                 </div>
-                ${mediaEmbedHTML ? `
+                ${(mediaEmbedHTML || audioLabeledHTML) ? `
                 <div class="media-container p-4 bg-slate-100 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
-                    ${mediaEmbedHTML}
+                    ${mediaEmbedHTML || ''}
+                    ${audioLabeledHTML || ''}
                 </div>
                 ` : ''}
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50">
@@ -749,7 +774,16 @@ function openModal(id) {
         
         // Set media
         if (videoElement) {
-            videoElement.innerHTML = generateMediaEmbed(item.link, true);
+            const mainMedia = generateMediaEmbed(item.link, true);
+            const audioDifferent = item && item.audio && item.audio.trim() && item.audio.trim() !== (item.link || '').trim();
+            const audioPlayerHTML = audioDifferent ? createAudioPlayer(item.audio, true) : '';
+            const audioLabeledHTML = audioDifferent ? `
+                <div class="mt-4 w-full max-w-2xl mx-auto">
+                    <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">🎧 Podcast (audio)</div>
+                    ${audioPlayerHTML}
+                </div>
+            ` : '';
+            videoElement.innerHTML = `${mainMedia}${audioLabeledHTML}`;
             videoElement.style.opacity = '1';
             videoElement.classList.add('content-fade-in');
         }
