@@ -67,8 +67,24 @@ function getAudioMime(src) {
 }
 
 // --- Config URLs ---
-const CONFIG_URL = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
+const CONFIG_URL = 'config.json';
+const CONFIG_URL_FALLBACK = 'https://raw.githubusercontent.com/Vibe-Coding-Educativo/boletin/refs/heads/main/config.json';
 const CORS_PROXY = 'https://corsproxy.io/?';
+
+async function fetchConfig() {
+    const fetchJson = async (url) => {
+        const response = await fetch(url, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP error fetching config! status: ${response.status}`);
+        return await response.json();
+    };
+
+    try {
+        return await fetchJson(CONFIG_URL);
+    } catch (error) {
+        console.warn('Config local no disponible, usando el config del repositorio:', error);
+        return await fetchJson(CONFIG_URL_FALLBACK);
+    }
+}
 
 async function fetchCsvText(csvUrl) {
     const fetchText = async (url) => {
@@ -260,9 +276,7 @@ function createAudioPlayer(src, isFullSize = false) {
 // --- Initialization ---
 async function init() {
     try {
-        const response = await fetch(CONFIG_URL);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        yearUrls = await response.json();
+        yearUrls = await fetchConfig();
         
         populateYearSelector();
         
