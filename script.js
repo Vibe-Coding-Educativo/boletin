@@ -121,6 +121,16 @@ function getCardIdFromURL() {
     return urlParams.get('boletin');
 }
 
+// Los IDs empiezan por el año (ej. "2025-40_2025-09-29_2025-10-05"). Se usa para
+// abrir el enlace directo en su año y no en el seleccionado por defecto.
+function getYearFromCardId(cardId) {
+    if (!cardId) return null;
+    const match = cardId.match(/^(\d{4})/);
+    if (!match) return null;
+    const year = match[1];
+    return yearUrls && yearUrls[year] ? year : null;
+}
+
 function copyToClipboard(text, message = 'Copiado al portapapeles') {
     navigator.clipboard.writeText(text).then(() => {
         showToast(message);
@@ -283,10 +293,17 @@ async function init() {
         const yearSelector = document.getElementById('year-selector');
         const selectedYear = yearSelector ? yearSelector.value : null;
         if (selectedYear) {
-            await loadAndProcessData(selectedYear);
-            
             // Check if there's a specific card to navigate to
             const targetCardId = getCardIdFromURL();
+            const yearFromCard = getYearFromCardId(targetCardId);
+            const yearToLoad = yearFromCard || selectedYear;
+
+            if (yearToLoad !== selectedYear && yearSelector) {
+                yearSelector.value = yearToLoad;
+            }
+
+            await loadAndProcessData(yearToLoad);
+
             if (targetCardId) {
                 // Wait a bit more for cards to render, then scroll to target
                 setTimeout(() => {
