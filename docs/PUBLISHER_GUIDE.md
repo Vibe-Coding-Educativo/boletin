@@ -1,9 +1,8 @@
 # Publicador de Boletín (proyecto externo)
 
-Este documento aclara cómo debe funcionar el proyecto externo de Google Apps Script que inserta nuevas filas en la hoja de cálculo. Este repositorio solo aloja la web (cliente) y la guía para generar contenidos.
+Este repositorio solo aloja la web (cliente). Las filas de la hoja de cálculo las escribe la fase 3 de `automatizaciones/boletin-semanal`, con una cuenta de servicio de Google. El Google Apps Script que se usaba antes está retirado.
 
-## Enlace del editor
-- Usa el editor de Apps Script indicado en `guia_estilo.md` para el proyecto "Publicador de Boletín VCE".
+Lo que sigue es el esquema de columnas que la web espera encontrar en el CSV.
 
 ## Esquema de columnas (orden obligatorio)
 1. `new Date()` (marca de tiempo)
@@ -22,8 +21,8 @@ Notas:
 - Si `link` ya es una URL de audio idéntica a `audio`, no dupliques reproductores; la web ya evita duplicados.
 
 ## Flujo recomendado
-- Tras aprobar el borrador (generado según `guia_estilo.md`), pega el Apps Script que añade una nueva fila con los 10 campos en la hoja `boletin` del Spreadsheet configurado.
-- Comprueba que la hoja incluye la columna `audio`. Si no existe, añádela al final antes de ejecutar el script.
+- La fase 3 de `automatizaciones/boletin-semanal` añade la fila en la hoja `boletin`, y valida el borrador antes de escribir.
+- Comprueba que la hoja incluye la columna `audio` al final. La rellena la fase 6 con la URL del MP3 en Internet Archive.
 
 ## Publicación del CSV
 - Asegúrate de que la hoja esté publicada como CSV y su URL esté referenciada por año en `config.json` de este repositorio.

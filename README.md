@@ -4,7 +4,7 @@
 
 Este proyecto es una aplicación web que presenta de forma interactiva los boletines semanales del grupo de Telegram [Vibe Coding Educativo](https://t.me/vceduca). La plataforma tiene un doble flujo de trabajo:
 
-1.  **Generación de Contenido**: Se utiliza una guía de estilo (`guia_estilo.md`) como prompt para una IA que procesa las conversaciones de Telegram. La IA genera un borrador del boletín que, una vez validado, se publica en una hoja de cálculo de Google Sheets mediante un Google Apps Script (proyecto externo).
+1.  **Generación de Contenido**: La lleva a cabo el repositorio `automatizaciones/boletin-semanal`, que exporta las conversaciones de Telegram, redacta el boletín y escribe la fila en la hoja de cálculo. Este repositorio no interviene en esa parte.
 2.  **Visualización Web**: La aplicación web carga los datos desde la hoja de cálculo (publicada como CSV) y los presenta en un formato de tarjetas dinámicas con opciones de búsqueda y filtrado.
 
 ## Estructura del Proyecto
@@ -13,18 +13,18 @@ Este proyecto es una aplicación web que presenta de forma interactiva los bolet
 * `style.css`: Contiene los estilos CSS personalizados que complementan a Tailwind CSS, incluyendo animaciones y temas, claro y oscuro.
 * `script.js`: Contiene toda la lógica de la aplicación en JavaScript. Se encarga de cargar los datos desde el CSV, renderizar las tarjetas de los boletines, gestionar los filtros, la búsqueda, la visualización de modales y el cambio de tema.
 * `config.json`: Archivo de configuración que almacena las URLs de los archivos CSV de Google Sheets para cada año.
-* `guia_estilo.md`: Es el prompt detallado que se utiliza para instruir a la inteligencia artificial sobre cómo generar el contenido de cada boletín a partir de las conversaciones de Telegram y cómo crear el script de publicación (Apps Script externo).
 * `README.md`: Este mismo archivo, con la documentación del proyecto.
 
 ## Flujo de Trabajo
 
 ### 1. Generación del Contenido del Boletín
 
-El proceso se inicia con la `guia_estilo.md`, un prompt diseñado para una IA.
+Ocurre fuera de este repositorio, en `automatizaciones/boletin-semanal`, que es
+la fuente única del proceso.
 
-* **Análisis**: La IA procesa un JSON con las conversaciones de la semana del grupo de Telegram.
-* **Creación del borrador**: Genera el contenido para 8 campos: `id_boletin`, `fecha_publicacion`, `titulo_boletin`, `resumen`, `cuerpo_principal_md`, `enlace_podcast_youtube`, `seccion_faq` y `palabras_clave`.
-* **Validación y Publicación**: Tras la revisión humana del borrador, la IA genera un `Google Apps Script` que, al ejecutarse, inserta el contenido del boletín en la hoja de cálculo designada, aplicando el formato correcto.
+* **Análisis**: se exportan las conversaciones de la semana del grupo de Telegram.
+* **Creación del borrador**: la IA redacta los campos `id_boletin`, `fecha_publicacion`, `titulo_boletin`, `resumen`, `cuerpo_principal_md`, `enlace_podcast_youtube`, `seccion_faq` y `palabras_clave`.
+* **Validación y Publicación**: tras la revisión humana, la fase 3 de aquel repositorio valida el borrador y escribe la fila en la hoja de cálculo con una cuenta de servicio de Google. El Apps Script que se usaba antes está retirado.
 
 ### 2. Visualización en la Web
 
@@ -44,9 +44,9 @@ El proceso se inicia con la `guia_estilo.md`, un prompt diseñado para una IA.
 
 ## Publicación (proyecto externo)
 
-Este repositorio NO contiene el código de publicación (Google Apps Script). Ese proyecto es independiente y se usa para insertar filas en la hoja de cálculo de destino.
+Este repositorio NO contiene el código de publicación. Las filas las escribe la fase 3 de `automatizaciones/boletin-semanal`, con una cuenta de servicio de Google.
 
-- Editor del proyecto (Apps Script): ver enlace indicado en `guia_estilo.md`.
+- El ID de la hoja de cada año vive en el `config.env` de aquel repositorio. Aquí solo se guarda, en `config.json`, la URL del CSV publicado.
 - Orden de columnas esperado en la hoja (CSV):
   1. Marca de tiempo
   2. id_boletin
